@@ -368,3 +368,8 @@ Route::get('/storage/{path}', function (string $path) {
 
     abort(404);
 })->where('path', '.*')->name('media.storage');
+
+// Preview Maintenance Page
+Route::get('/preview-maintenance', function () {
+    return response()->view('errors.503', [], 503);
+})->name('preview.maintenance');
