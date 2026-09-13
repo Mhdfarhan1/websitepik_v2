@@ -260,6 +260,60 @@
                     </form>
                 </div>
             </div>
+
+            <!-- cPanel / Shared Hosting Storage Synchronization & Health Tool -->
+            <div class="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100 shrink-0">
+                            <i class="fas fa-server text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800 leading-tight">Perbaikan & Sinkronisasi Storage Hosting (cPanel)</h3>
+                            <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest leading-none">Mengatasi gambar upload yang tidak muncul setelah website di-hosting</p>
+                        </div>
+                    </div>
+                    <form action="{{ route('dashboard.media-optimizer.sync-cpanel') }}" method="POST" onsubmit="return confirm('Mulai sinkronisasi seluruh gambar dan perbaikan storage hosting?')">
+                        @csrf
+                        <button type="submit" class="w-full sm:w-auto px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-lg shadow-emerald-600/20 transition-all cursor-pointer">
+                            <i class="fas fa-sync-alt text-sm"></i>
+                            <span>Sinkronkan File Media Sekarang</span>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Direktori Publik Aktif</p>
+                        <p class="text-xs font-bold text-slate-700 font-mono mt-1 truncate" title="{{ public_path() }}">{{ public_path() }}</p>
+                        <span class="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 mt-2">
+                            <i class="fas fa-check-circle"></i> Terdeteksi Otomatis
+                        </span>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status Symlink Storage</p>
+                        <p class="text-xs font-bold text-slate-700 font-mono mt-1 truncate">
+                            @if(file_exists(public_path('storage')))
+                                {{ is_link(public_path('storage')) ? 'Tersambung (Symbolic Link)' : 'Folder Fisik Ada' }}
+                            @else
+                                Belum Terhubung (Fallback Aktif)
+                            @endif
+                        </p>
+                        <span class="inline-flex items-center gap-1.5 text-[10px] font-bold text-blue-600 mt-2">
+                            <i class="fas fa-shield-alt"></i> Fallback Route 100% Aktif
+                        </span>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Proteksi Gambar Pecah</p>
+                        <p class="text-xs font-bold text-slate-700 mt-1">Anti-404 Media Fallback</p>
+                        <span class="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 mt-2">
+                            <i class="fas fa-check-circle"></i> Otomatis Menyalin File Lama
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -11,7 +11,21 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Re-bind public_path if on cPanel hosting to ensure container consistency
+        $cpanelPublic = env('PUBLIC_PATH');
+        if (!$cpanelPublic && !empty($_SERVER['DOCUMENT_ROOT']) && is_dir($_SERVER['DOCUMENT_ROOT']) && realpath($_SERVER['DOCUMENT_ROOT']) !== realpath(base_path())) {
+            $cpanelPublic = realpath($_SERVER['DOCUMENT_ROOT']);
+        }
+        if (!$cpanelPublic && is_dir(base_path('../public_html'))) {
+            $cpanelPublic = realpath(base_path('../public_html'));
+        }
+        if (!$cpanelPublic && is_dir(base_path('public_html'))) {
+            $cpanelPublic = realpath(base_path('public_html'));
+        }
+
+        if ($cpanelPublic) {
+            $this->app->usePublicPath($cpanelPublic);
+        }
     }
 
     /**

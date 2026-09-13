@@ -4,7 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
-return Application::configure(basePath: dirname(__DIR__))
+$app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
@@ -20,3 +20,23 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
+
+// Auto-detect public path for cPanel shared hosting (public_html)
+$basePath = dirname(__DIR__);
+$cpanelPublic = null;
+
+if (!empty($_ENV['PUBLIC_PATH']) && is_dir($_ENV['PUBLIC_PATH'])) {
+    $cpanelPublic = $_ENV['PUBLIC_PATH'];
+} elseif (!empty($_SERVER['DOCUMENT_ROOT']) && is_dir($_SERVER['DOCUMENT_ROOT']) && realpath($_SERVER['DOCUMENT_ROOT']) !== realpath($basePath)) {
+    $cpanelPublic = realpath($_SERVER['DOCUMENT_ROOT']);
+} elseif (is_dir($basePath . '/../public_html')) {
+    $cpanelPublic = realpath($basePath . '/../public_html');
+} elseif (is_dir($basePath . '/public_html')) {
+    $cpanelPublic = realpath($basePath . '/public_html');
+}
+
+if ($cpanelPublic) {
+    $app->usePublicPath($cpanelPublic);
+}
+
+return $app;

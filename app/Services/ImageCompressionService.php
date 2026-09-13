@@ -91,11 +91,24 @@ class ImageCompressionService
                 // Save to public directory
                 $destinationDir = public_path(trim($directory, '/'));
                 if (!File::exists($destinationDir)) {
-                    File::makeDirectory($destinationDir, 0755, true);
+                    File::makeDirectory($destinationDir, 0755, true, true);
                 }
 
                 $absolutePath = $destinationDir . DIRECTORY_SEPARATOR . $filename;
                 $image->save($absolutePath, quality: $quality);
+
+                // If public_path is different from project public (e.g. cPanel public_html), also mirror file to project public
+                $projectPublicDir = base_path('public/' . trim($directory, '/'));
+                if (realpath($destinationDir) !== realpath($projectPublicDir)) {
+                    try {
+                        if (!File::exists($projectPublicDir)) {
+                            File::makeDirectory($projectPublicDir, 0755, true, true);
+                        }
+                        @copy($absolutePath, $projectPublicDir . DIRECTORY_SEPARATOR . $filename);
+                    } catch (\Throwable $e) {
+                        // Suppress mirroring failure
+                    }
+                }
 
                 return trim($directory, '/') . '/' . $filename;
             }
@@ -120,9 +133,24 @@ class ImageCompressionService
         } else {
             $destinationDir = public_path(trim($directory, '/'));
             if (!File::exists($destinationDir)) {
-                File::makeDirectory($destinationDir, 0755, true);
+                File::makeDirectory($destinationDir, 0755, true, true);
             }
+            $targetPath = $destinationDir . DIRECTORY_SEPARATOR . $filename;
             $file->move($destinationDir, $filename);
+
+            // Mirror to project public if running in cPanel public_html
+            $projectPublicDir = base_path('public/' . trim($directory, '/'));
+            if (realpath($destinationDir) !== realpath($projectPublicDir)) {
+                try {
+                    if (!File::exists($projectPublicDir)) {
+                        File::makeDirectory($projectPublicDir, 0755, true, true);
+                    }
+                    @copy($targetPath, $projectPublicDir . DIRECTORY_SEPARATOR . $filename);
+                } catch (\Throwable $e) {
+                    // Suppress mirroring failure
+                }
+            }
+
             return trim($directory, '/') . '/' . $filename;
         }
     }
@@ -145,6 +173,12 @@ class ImageCompressionService
                 $fullPath = public_path($path);
                 if (File::exists($fullPath) && is_file($fullPath)) {
                     File::delete($fullPath);
+                }
+
+                // Also clean from project public if different
+                $projectFullPath = base_path('public/' . ltrim($path, '/\\'));
+                if (realpath($fullPath) !== realpath($projectFullPath) && File::exists($projectFullPath) && is_file($projectFullPath)) {
+                    File::delete($projectFullPath);
                 }
             }
         } catch (\Throwable $e) {

@@ -263,6 +263,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('dashboard')->name('dash
     Route::get('/media-optimizer', [MediaOptimizerController::class, 'index'])->name('media-optimizer.index');
     Route::post('/media-optimizer/simulate', [MediaOptimizerController::class, 'simulate'])->name('media-optimizer.simulate');
     Route::post('/media-optimizer/batch', [MediaOptimizerController::class, 'batchOptimize'])->name('media-optimizer.batch');
+    Route::post('/media-optimizer/sync-cpanel', [MediaOptimizerController::class, 'syncCpanelStorage'])->name('media-optimizer.sync-cpanel');
 
     // Peer Evaluation Admin Configuration
     Route::get('/peer-evaluation/config', [PeerEvaluationAdminController::class, 'index'])->name('peer-evaluation.config');
@@ -290,3 +291,80 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('dashboard')->name('dash
     // Activity Logs
     Route::get('/activity-logs', [\App\Http\Controllers\Dashboard\ActivityLogController::class, 'index'])->name('activity-logs.index');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Media Fallback Routes (Anti-Broken Images for cPanel & Shared Hosting)
+|--------------------------------------------------------------------------
+| When web server rewrite triggers because a static file is not directly found
+| in public_html, these routes search candidate locations (project public & storage),
+| auto-synchronize to public_html, and stream the file with caching headers.
+*/
+Route::get('/uploads/{path}', function (string $path) {
+    $cleanPath = str_replace(['../', '..\\'], '', $path);
+
+    // Candidate 1: Current public_path (e.g. public_html/uploads/...)
+    $file1 = public_path('uploads/' . $cleanPath);
+    if (file_exists($file1) && is_file($file1)) {
+        return response()->file($file1, [
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+        ]);
+    }
+
+    // Candidate 2: Project public uploads (e.g. websitepik_v2/public/uploads/...)
+    $file2 = base_path('public/uploads/' . $cleanPath);
+    if (file_exists($file2) && is_file($file2)) {
+        // Auto-copy to public_path so Apache/LiteSpeed serves it statically on next hits
+        try {
+            $destDir = dirname($file1);
+            if (!is_dir($destDir)) {
+                @mkdir($destDir, 0755, true);
+            }
+            @copy($file2, $file1);
+        } catch (\Throwable $e) {}
+
+        return response()->file($file2, [
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+        ]);
+    }
+
+    // Candidate 3: storage/app/public/uploads/...
+    $file3 = storage_path('app/public/uploads/' . $cleanPath);
+    if (file_exists($file3) && is_file($file3)) {
+        return response()->file($file3, [
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+        ]);
+    }
+
+    abort(404);
+})->where('path', '.*')->name('media.uploads');
+
+Route::get('/storage/{path}', function (string $path) {
+    $cleanPath = str_replace(['../', '..\\'], '', $path);
+
+    // Candidate 1: storage_path('app/public/...')
+    $file1 = storage_path('app/public/' . $cleanPath);
+    if (file_exists($file1) && is_file($file1)) {
+        return response()->file($file1, [
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+        ]);
+    }
+
+    // Candidate 2: public_path('storage/...')
+    $file2 = public_path('storage/' . $cleanPath);
+    if (file_exists($file2) && is_file($file2)) {
+        return response()->file($file2, [
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+        ]);
+    }
+
+    // Candidate 3: base_path('public/storage/...')
+    $file3 = base_path('public/storage/' . $cleanPath);
+    if (file_exists($file3) && is_file($file3)) {
+        return response()->file($file3, [
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+        ]);
+    }
+
+    abort(404);
+})->where('path', '.*')->name('media.storage');
