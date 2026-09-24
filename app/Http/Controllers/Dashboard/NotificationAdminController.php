@@ -195,7 +195,10 @@ class NotificationAdminController extends Controller
                 broadcastPush: true
             );
             $successCount = $notification->data['success'] ?? 0;
-            return back()->with('success', "Notifikasi berhasil disiarkan ke {$successCount} subscriber device!");
+            if ($successCount > 0) {
+                return back()->with('success', "Notifikasi berhasil disiarkan ke {$successCount} subscriber device!");
+            }
+            return back()->with('success', "Notifikasi disimpan di Pusat Notifikasi. Belum ada HP yang aktif (0 perangkat terkirim). Buka website di HP Anda lalu izinkan notifikasi agar HP terhubung.");
         }
 
         // Jika 2 atau lebih, buat notifikasi gabungan (Anti-Spam Grouping)
@@ -214,7 +217,10 @@ class NotificationAdminController extends Controller
             );
 
             $successCount = $notification->data['success'] ?? 0;
-            return back()->with('success', "Berhasil menggabungkan {$count} konten ke dalam 1 notifikasi siaran! Terkirim ke {$successCount} subscriber device.");
+            if ($successCount > 0) {
+                return back()->with('success', "Berhasil menggabungkan {$count} konten ke dalam 1 notifikasi siaran! Terkirim ke {$successCount} subscriber device.");
+            }
+            return back()->with('success', "Konten berhasil disimpan ke Pusat Notifikasi. Belum ada subscriber aktif (0 perangkat). Buka website di HP Anda untuk mendaftarkan perangkat.");
         } catch (\Throwable $e) {
             return back()->with('error', 'Gagal menggabungkan notifikasi: ' . $e->getMessage());
         }

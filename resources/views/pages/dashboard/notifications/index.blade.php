@@ -30,14 +30,22 @@
         <div class="p-6 lg:p-10 max-w-7xl mx-auto w-full space-y-8">
             <!-- 1. Stat Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
-                <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
-                        <i class="fas fa-mobile-alt"></i>
+                <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between gap-3">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-black text-slate-800">{{ number_format($stats['active_subscribers'] ?? 0) }}</div>
+                            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Device Subscriber Aktif</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="text-2xl font-black text-slate-800">{{ number_format($stats['active_subscribers'] ?? 0) }}</div>
-                        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Device Subscriber Aktif</div>
-                    </div>
+                    <button type="button" 
+                            onclick="if(window.PikrWebPush){PikrWebPush.subscribe().then(s=>{if(s)location.reload();});}else{alert('WebPush belum siap');}" 
+                            class="w-full py-1.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-[11px] transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-bell"></i>
+                        <span>+ Hubungkan Browser Ini</span>
+                    </button>
                 </div>
 
                 <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">

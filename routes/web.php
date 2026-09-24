@@ -462,9 +462,12 @@ Route::get('/assets/{path}', function (string $path) {
             'webp' => 'image/webp',
             default => mime_content_type($file) ?: 'text/plain',
         };
+        $cacheHeader = in_array($ext, ['js', 'css'])
+            ? 'no-cache, no-store, must-revalidate'
+            : 'public, max-age=86400';
         return response(file_get_contents($file), 200, [
             'Content-Type' => $mime,
-            'Cache-Control' => 'public, max-age=31536000',
+            'Cache-Control' => $cacheHeader,
         ]);
     }
     abort(404);
