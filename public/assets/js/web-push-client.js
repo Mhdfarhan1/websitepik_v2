@@ -24,7 +24,15 @@
         vapidPublicKey: null,
 
         async init() {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            // Auto redirect to HTTPS if on live domain (e.g. cPanel)
+            if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                try {
+                    window.location.href = window.location.href.replace('http:', 'https:');
+                    return;
+                } catch (e) {}
+            }
+
+            if (!('serviceWorker' in navigator) || !('PushManager' in window) || typeof window.Notification === 'undefined') {
                 this.isSupported = false;
                 this.updateUI();
                 return;
@@ -300,43 +308,97 @@
     window.pikrPushPromptBottom = function() {
         return {
             show: false,
-            state: 'prompt', // 'prompt' | 'loading' | 'success' | 'denied'
+            state: 'prompt', // 'prompt' | 'loading' | 'success' | 'denied' | 'unsupported' | 'need_https'
+            copied: false,
             initPrompt() {
-                if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
-                    return;
+                const urlParams = new URLSearchParams(window.location.search);
+                const forceShow = urlParams.has('notif') || urlParams.has('prompt') || urlParams.has('reset_push');
+
+                if (forceShow) {
+                    try {
+                        sessionStorage.removeItem('pikr_push_prompt_dismissed');
+                        localStorage.removeItem('pikr_push_prompt_dismissed');
+                    } catch (e) {}
+                } else {
+                    try {
+                        if (sessionStorage.getItem('pikr_push_prompt_dismissed')) {
+                            return;
+                        }
+                    } catch (e) {}
                 }
-                if (Notification.permission === 'granted' || Notification.permission === 'denied') {
-                    return;
-                }
-                const dismissedAt = localStorage.getItem('pikr_push_prompt_dismissed');
-                if (dismissedAt) {
-                    const hoursPassed = (Date.now() - parseInt(dismissedAt, 10)) / (1000 * 60 * 60);
-                    if (hoursPassed < 48) {
-                        return;
+
+                // Safe check notification permission
+                let permission = 'default';
+                try {
+                    if (typeof window.Notification !== 'undefined') {
+                        permission = window.Notification.permission;
                     }
+                } catch (e) {}
+
+                // If already granted and subscribed, don't nag
+                if (permission === 'granted' && window.PikrWebPush && window.PikrWebPush.isSubscribed && !forceShow) {
+                    return;
                 }
+
+                // Display prompt after a brief 600ms entrance delay
                 setTimeout(() => {
-                    if (Notification.permission === 'default') {
-                        this.show = true;
-                    }
-                }, 2000);
+                    this.show = true;
+                }, 600);
             },
             dismissPrompt() {
                 this.show = false;
-                localStorage.setItem('pikr_push_prompt_dismissed', Date.now().toString());
+                try {
+                    sessionStorage.setItem('pikr_push_prompt_dismissed', 'true');
+                } catch (e) {}
+            },
+            redirectToHttps() {
+                window.location.href = window.location.href.replace('http:', 'https:');
+            },
+            copyUrl() {
+                try {
+                    navigator.clipboard.writeText(window.location.href);
+                    this.copied = true;
+                    setTimeout(() => { this.copied = false; }, 2500);
+                } catch (e) {
+                    alert('Link website: ' + window.location.href);
+                }
+            },
+            openInChrome() {
+                const currentUrl = window.location.href.replace(/^https?:\/\//, '');
+                const scheme = window.location.protocol.replace(':', '');
+                window.location.href = 'intent://' + currentUrl + '#Intent;scheme=' + scheme + ';package=com.android.chrome;end';
             },
             async enablePush() {
+                // Check if on insecure HTTP on live host
+                if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                    this.state = 'need_https';
+                    return;
+                }
+
+                // Check push support
+                const hasSW = 'serviceWorker' in navigator;
+                const hasPush = 'PushManager' in window;
+                const hasNotif = typeof window.Notification !== 'undefined';
+
+                if (!hasSW || !hasPush || !hasNotif) {
+                    this.state = 'unsupported';
+                    return;
+                }
+
                 this.state = 'loading';
                 try {
                     if (window.PikrWebPush) {
                         const success = await window.PikrWebPush.subscribe(true);
                         if (success) {
                             this.state = 'success';
-                            localStorage.removeItem('pikr_push_prompt_dismissed');
-                            setTimeout(() => { this.show = false; }, 2200);
+                            try { sessionStorage.removeItem('pikr_push_prompt_dismissed'); } catch (e) {}
+                            setTimeout(() => { this.show = false; }, 2600);
                         } else {
-                            if (Notification.permission === 'denied') {
+                            const perm = typeof window.Notification !== 'undefined' ? window.Notification.permission : '';
+                            if (perm === 'denied') {
                                 this.state = 'denied';
+                            } else if (!window.PikrWebPush.isSupported) {
+                                this.state = 'unsupported';
                             } else {
                                 this.state = 'prompt';
                             }
@@ -345,14 +407,16 @@
                         const permission = await Notification.requestPermission();
                         if (permission === 'granted') {
                             this.state = 'success';
-                            setTimeout(() => { this.show = false; }, 2000);
-                        } else {
+                            setTimeout(() => { this.show = false; }, 2200);
+                        } else if (permission === 'denied') {
                             this.state = 'denied';
+                        } else {
+                            this.state = 'prompt';
                         }
                     }
                 } catch (e) {
+                    console.error('Error enabling push:', e);
                     this.state = 'prompt';
-                    this.show = false;
                 }
             }
         };

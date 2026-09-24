@@ -16,6 +16,10 @@ class WebPushService
      */
     protected function getWebPush(): ?WebPush
     {
+        if (file_exists(app_path('Support/Base64UrlPolyfill.php'))) {
+            require_once app_path('Support/Base64UrlPolyfill.php');
+        }
+
         if ($this->webPush) {
             return $this->webPush;
         }
@@ -76,7 +80,9 @@ class WebPushService
 
         // 2. Dispatch Push Notification if enabled
         if ($broadcastPush) {
-            $this->dispatchWebPush($notification);
+            $pushResult = $this->dispatchWebPush($notification);
+            $notification->data = array_merge($notification->data ?? [], $pushResult);
+            $notification->save();
         }
 
         return $notification;

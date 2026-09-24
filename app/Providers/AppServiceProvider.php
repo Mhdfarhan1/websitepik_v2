@@ -11,6 +11,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Polyfill Base64Url to prevent crash on cPanel if vendor/spomky-labs is missing
+        if (file_exists(app_path('Support/Base64UrlPolyfill.php'))) {
+            require_once app_path('Support/Base64UrlPolyfill.php');
+        }
+
         // Re-bind public_path if on cPanel hosting to ensure container consistency
         $cpanelPublic = env('PUBLIC_PATH');
         if (!$cpanelPublic && !empty($_SERVER['DOCUMENT_ROOT']) && is_dir($_SERVER['DOCUMENT_ROOT']) && realpath($_SERVER['DOCUMENT_ROOT']) !== realpath(base_path())) {

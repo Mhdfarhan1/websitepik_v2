@@ -5,6 +5,12 @@
 
     RewriteEngine On
 
+    # Force HTTPS on live domains (cPanel), bypass for local development
+    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP_HOST} !^localhost(:[0-9]+)?$
+    RewriteCond %{HTTP_HOST} !^127\.0\.0\.1(:[0-9]+)?$
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
