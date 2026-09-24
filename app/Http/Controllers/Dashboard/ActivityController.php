@@ -63,7 +63,7 @@ class ActivityController extends Controller
             );
         }
 
-        Activity::create([
+        $activity = Activity::create([
             'title' => $request->title,
             'slug' => Str::slug($request->title) . '-' . Str::random(4),
             'description' => $request->description,
@@ -76,6 +76,18 @@ class ActivityController extends Controller
             'image' => $imagePath,
             'created_by' => auth()->id(),
         ]);
+
+        // Dispatch Centralized Web Push & Notification Center
+        try {
+            app(\App\Services\WebPushService::class)->send(
+                title: 'Kegiatan Baru 📅',
+                message: 'Kegiatan terbaru PIK-R REQUEST telah ditambahkan: "' . $activity->title . '"',
+                url: route('kegiatan.show', $activity->slug),
+                type: 'kegiatan'
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Notification error on activity store: ' . $e->getMessage());
+        }
 
         return redirect()->route('dashboard.activities.index')->with('success', 'Kegiatan agenda berhasil ditambahkan!');
     }

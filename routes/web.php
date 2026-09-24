@@ -20,13 +20,16 @@ use App\Http\Controllers\Dashboard\WorkProgramController;
 use App\Http\Controllers\Dashboard\PeerEducationController;
 use App\Http\Controllers\Dashboard\ReportController;
 use App\Http\Controllers\Dashboard\MediaOptimizerController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Controllers\Dashboard\NotificationAdminController;
 
 use App\Models\Partner;
 use App\Models\News;
 use App\Models\Gallery;
 use App\Models\Achievement;
 
-Route::get('/', function (\App\Services\OrganizationStructureService $structureService) {
+Route::get('/', function (\App\Services\OrganizationStructureService $structureService, \App\Services\TributeService $tributeService) {
     $partners = Partner::all();
     $newsList = (new \App\Services\NewsService())->getLatestNews(4);
     $galleryList = (new \App\Services\GalleryService())->getAllGallery();
@@ -34,7 +37,9 @@ Route::get('/', function (\App\Services\OrganizationStructureService $structureS
     $activities = \App\Models\Activity::with('creator')->orderBy('event_date', 'asc')->get();
     $structures = $structureService->getAllStructures();
     $structureSettings = $structureService->getSettings();
-    return view('welcome', compact('partners', 'newsList', 'galleryList', 'achievementList', 'activities', 'structures', 'structureSettings'));
+    $tributeEditions = $tributeService->getAllEditions(true);
+    $featuredTribute = $tributeService->getFeaturedEdition();
+    return view('welcome', compact('partners', 'newsList', 'galleryList', 'achievementList', 'activities', 'structures', 'structureSettings', 'tributeEditions', 'featuredTribute'));
 });
 
 Route::get('/profil/visi-misi', function (\App\Services\ProfileService $profileService) {
@@ -53,6 +58,25 @@ Route::get('/profil/sejarah', function (\App\Services\ProfileService $profileSer
     $milestones = $profileService->getAllMilestones();
     return view('pages.sejarah', compact('settings', 'milestones'));
 })->name('sejarah');
+
+Route::get('/profil/jejak-bakti', function (\Illuminate\Http\Request $request, \App\Services\TributeService $tributeService) {
+    $editions = $tributeService->getAllEditions(true);
+    $selectedPeriod = $request->query('periode');
+    
+    if ($selectedPeriod) {
+        $activeEdition = $editions->firstWhere('period', $selectedPeriod) ?? $editions->first();
+    } else {
+        $activeEdition = $editions->firstWhere('is_featured', true) ?? $editions->first();
+    }
+
+    return view('pages.jejak-bakti', compact('editions', 'activeEdition'));
+})->name('jejak-bakti');
+
+Route::post('/api/tributes/appreciate', function (\Illuminate\Http\Request $request, \App\Services\TributeService $tributeService) {
+    $editionId = $request->input('edition_id');
+    $count = $tributeService->incrementAppreciation($editionId);
+    return response()->json(['success' => true, 'count' => $count]);
+})->name('tributes.appreciate');
 
 Route::get('/kegiatan', function () {
     $activities = \App\Models\Activity::with('creator')->latest('event_date')->paginate(3);
@@ -161,6 +185,19 @@ Route::get('/galeri', function () {
     return view('pages.gallery.index', compact('galleryList'));
 })->name('gallery.index');
 
+// Public Notification Center & Web Push API Routes
+Route::get('/notifikasi', [NotificationController::class, 'index'])->name('notifications.index');
+Route::get('/notifikasi/{id}/baca', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+Route::post('/notifikasi/tandai-semua', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+
+Route::get('/api/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('api.notifications.unread-count');
+Route::get('/api/notifications/recent', [NotificationController::class, 'getRecent'])->name('api.notifications.recent');
+Route::post('/api/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('api.notifications.mark-all-read');
+
+Route::get('/api/push-subscriptions/vapid-public-key', [PushSubscriptionController::class, 'vapidPublicKey'])->name('api.push-subscriptions.key');
+Route::post('/api/push-subscriptions', [PushSubscriptionController::class, 'store'])->name('api.push-subscriptions.store');
+Route::post('/api/push-subscriptions/unsubscribe', [PushSubscriptionController::class, 'destroy'])->name('api.push-subscriptions.destroy');
+
 // Public Pendaftaran (Member Application)
 Route::get('/daftar', [RegistrationController::class, 'showForm'])->name('register');
 Route::post('/daftar', [RegistrationController::class, 'store'])->name('register.post');
@@ -233,6 +270,25 @@ Route::middleware(['auth', 'force_password'])->prefix('dashboard')->name('dashbo
     Route::get('/peer-evaluation', [PeerEvaluationMemberController::class, 'index'])->name('peer-evaluation.index');
     Route::get('/peer-evaluation/evaluate/{peerId}', [PeerEvaluationMemberController::class, 'evaluate'])->name('peer-evaluation.evaluate');
     Route::post('/peer-evaluation/evaluate/{peerId}', [PeerEvaluationMemberController::class, 'submit'])->name('peer-evaluation.submit');
+
+    // Jejak Bakti & Apresiasi Duta GenRe (Multi-Edition / Generasi)
+    Route::get('/tributes', [\App\Http\Controllers\Dashboard\TributeController::class, 'index'])->name('tributes.index');
+    Route::post('/tributes/editions', [\App\Http\Controllers\Dashboard\TributeController::class, 'storeEdition'])->name('tributes.editions.store');
+    Route::put('/tributes/editions/{id}', [\App\Http\Controllers\Dashboard\TributeController::class, 'updateEdition'])->name('tributes.editions.update');
+    Route::post('/tributes/editions/{id}/feature', [\App\Http\Controllers\Dashboard\TributeController::class, 'setFeatured'])->name('tributes.editions.feature');
+    Route::delete('/tributes/editions/{id}', [\App\Http\Controllers\Dashboard\TributeController::class, 'destroyEdition'])->name('tributes.editions.destroy');
+    Route::post('/tributes/figures', [\App\Http\Controllers\Dashboard\TributeController::class, 'storeFigure'])->name('tributes.figures.store');
+    Route::put('/tributes/figures/{id}', [\App\Http\Controllers\Dashboard\TributeController::class, 'updateFigure'])->name('tributes.figures.update');
+    Route::delete('/tributes/figures/{id}', [\App\Http\Controllers\Dashboard\TributeController::class, 'destroyFigure'])->name('tributes.figures.destroy');
+    Route::post('/tributes/memories', [\App\Http\Controllers\Dashboard\TributeController::class, 'storeMemory'])->name('tributes.memories.store');
+    Route::delete('/tributes/memories/{id}', [\App\Http\Controllers\Dashboard\TributeController::class, 'destroyMemory'])->name('tributes.memories.destroy');
+
+    // Pusat Notifikasi & Broadcast Web Push
+    Route::get('/notifications', [NotificationAdminController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/send', [NotificationAdminController::class, 'sendManual'])->name('notifications.send');
+    Route::post('/notifications/quick-send', [NotificationAdminController::class, 'quickSend'])->name('notifications.quick-send');
+    Route::post('/notifications/batch-send', [NotificationAdminController::class, 'batchSend'])->name('notifications.batch-send');
+    Route::delete('/notifications/{notification}', [NotificationAdminController::class, 'destroy'])->name('notifications.destroy');
 });
 
 Route::middleware(['auth', 'role:super_admin'])->prefix('dashboard')->name('dashboard.')->group(function () {

@@ -59,6 +59,18 @@ class NewsController extends Controller
 
         $news = $this->newsService->createNews($data);
 
+        // Dispatch Centralized Web Push & Notification Center
+        try {
+            app(\App\Services\WebPushService::class)->send(
+                title: 'Artikel Baru 📰',
+                message: 'Artikel edukasi & berita terbaru telah tersedia: "' . $news->title . '"',
+                url: route('news.show', $news->slug ?? $news->id),
+                type: 'artikel'
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Notification error on news store: ' . $e->getMessage());
+        }
+
         \App\Services\ActivityLogService::log(
             'created',
             "Membuat berita: {$data['title']}",

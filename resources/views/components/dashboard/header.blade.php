@@ -14,37 +14,8 @@
 
     <!-- Right Actions -->
     <div class="flex items-center gap-4 lg:gap-6">
-        <!-- Notifications -->
-        <div class="relative" x-data="{ openNotif: false }">
-            <button @click="openNotif = !openNotif" @click.outside="openNotif = false" class="relative w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-all cursor-pointer">
-                <i class="fas fa-bell text-lg"></i>
-                <span class="absolute top-3 right-3 w-2 h-2 bg-rose-500 border-2 border-white rounded-full"></span>
-            </button>
-
-            <!-- Notifications Dropdown -->
-            <div x-show="openNotif" 
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
-                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave="transition ease-in duration-150"
-                 class="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-50">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-                    <h4 class="text-xs font-bold text-slate-800">Notifikasi Sistem</h4>
-                    <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">Baru</span>
-                </div>
-                <div class="space-y-3">
-                    <div class="flex items-start gap-3 text-xs">
-                        <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
-                            <i class="fas fa-info-circle"></i>
-                        </div>
-                        <div>
-                            <p class="font-bold text-slate-800">Sistem PIK-R Berjalan Normal</p>
-                            <p class="text-[10px] text-slate-400">Seluruh fitur admin siap digunakan</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Live Notifications Dropdown -->
+        <x-notifications.navbar-bell />
 
         <!-- Profile Dropdown -->
         <div class="relative" x-data="{ openProfile: false }">

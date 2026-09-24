@@ -64,7 +64,19 @@ class AchievementController extends Controller
             $data['photos'] = $request->file('photos');
         }
 
-        $this->achievementService->createAchievement($data);
+        $achievement = $this->achievementService->createAchievement($data);
+
+        // Dispatch Centralized Web Push & Notification Center
+        try {
+            app(\App\Services\WebPushService::class)->send(
+                title: 'Prestasi Baru 🏆',
+                message: 'PIK-R REQUEST mengukir prestasi baru: "' . $achievement->title . '"',
+                url: route('prestasi.show', $achievement->id),
+                type: 'prestasi'
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Notification error on achievement store: ' . $e->getMessage());
+        }
 
         return redirect()->route('dashboard.achievements.index')->with('success', 'Prestasi dan dokumentasi foto berhasil ditambahkan!');
     }

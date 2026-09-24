@@ -12,6 +12,9 @@ $app = Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(\App\Http\Middleware\SecureHeaders::class);
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+        ]);
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'force_password' => \App\Http\Middleware\ForcePasswordChange::class,

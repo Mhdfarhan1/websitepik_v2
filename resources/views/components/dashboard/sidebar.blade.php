@@ -93,6 +93,10 @@
                     Prestasi
                 </x-dashboard.sidebar-item>
             @endif
+
+            <x-dashboard.sidebar-item href="{{ route('dashboard.notifications.index') }}" icon="fas fa-bell" :active="request()->routeIs('dashboard.notifications.*')">
+                Pusat Notifikasi
+            </x-dashboard.sidebar-item>
         </div>
         @endif
 
@@ -146,6 +150,10 @@
                     Profil & Sejarah
                 </x-dashboard.sidebar-item>
             @endif
+
+            <x-dashboard.sidebar-item href="{{ route('dashboard.tributes.index') }}" icon="fas fa-award" :active="request()->routeIs('dashboard.tributes.*')">
+                Jejak Bakti & Duta
+            </x-dashboard.sidebar-item>
 
             @if($canSee('profil_lengkap'))
                 <x-dashboard.sidebar-item href="{{ route('dashboard.complete-profile.index') }}" icon="fas fa-address-card" :active="request()->routeIs('dashboard.complete-profile.*')">

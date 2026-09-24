@@ -57,6 +57,10 @@
                             <a href="{{ route('struktur') }}" class="{{ request()->routeIs('struktur') ? 'text-brand' : '' }}">Struktur Organisasi</a>
                             <a href="{{ route('sejarah') }}" class="{{ request()->routeIs('sejarah') ? 'text-brand' : '' }}">Sejarah</a>
                             <a href="{{ route('profil-lengkap') }}" class="{{ request()->routeIs('profil-lengkap') ? 'text-brand' : '' }}">Profil Lengkap</a>
+                            <a href="{{ route('jejak-bakti') }}" class="{{ request()->routeIs('jejak-bakti') ? 'text-brand' : '' }} flex items-center justify-between">
+                                <span>Jejak Bakti & Duta</span>
+                                <span class="px-1.5 py-0.5 rounded text-[9px] bg-amber-100 text-amber-800 font-black uppercase tracking-wider">Juara</span>
+                            </a>
                         </div>
                     </div>
 
@@ -76,8 +80,6 @@
                     <a href="{{ route('kegiatan') }}" class="text-[13px] font-bold {{ request()->routeIs('kegiatan') ? 'text-brand' : 'text-slate-800' }} hover:text-brand transition-all uppercase tracking-wide">KEGIATAN</a>
 
                     <a href="{{ route('prestasi') }}" class="text-[13px] font-bold {{ request()->routeIs('prestasi') ? 'text-brand' : 'text-slate-800' }} hover:text-brand transition-all uppercase tracking-wide">PRESTASI</a>
-                    
-                
 
                     <!-- Language selector icon (Indo flag style) -->
                     <div class="relative dropdown ml-2 flex items-center">
@@ -95,8 +97,8 @@
                     </div>
                 </div>
 
-                <!-- Mobile Menu Button -->
-                <div class="lg:hidden flex items-center">
+                <!-- Mobile Menu -->
+                <div class="lg:hidden flex items-center gap-2">
                     <button id="mobile-menu-btn" class="text-slate-600 bg-slate-50 hover:bg-slate-100 p-2 focus:outline-none transition-colors rounded-xl hover:text-brand">
                         <i class="fas fa-bars text-xl" id="menu-icon"></i>
                     </button>
@@ -137,6 +139,10 @@
                         <a href="{{ route('struktur') }}" class="px-8 py-3.5 block text-[14px] {{ request()->routeIs('struktur') ? 'text-brand font-bold' : 'text-white/70' }} hover:text-white hover:pl-10 transition-all duration-300 border-t border-white/5">Struktur Organisasi</a>
                         <a href="{{ route('sejarah') }}" class="px-8 py-3.5 block text-[14px] {{ request()->routeIs('sejarah') ? 'text-brand font-bold' : 'text-white/70' }} hover:text-white hover:pl-10 transition-all duration-300 border-t border-white/5">Sejarah</a>
                         <a href="{{ route('profil-lengkap') }}" class="px-8 py-3.5 block text-[14px] {{ request()->routeIs('profil-lengkap') ? 'text-brand font-bold' : 'text-white/70' }} hover:text-white hover:pl-10 transition-all duration-300 border-t border-white/5">Profil Lengkap</a>
+                        <a href="{{ route('jejak-bakti') }}" class="px-8 py-3.5 flex items-center justify-between text-[14px] {{ request()->routeIs('jejak-bakti') ? 'text-brand font-bold' : 'text-white/70' }} hover:text-white hover:pl-10 transition-all duration-300 border-t border-white/5">
+                            <span>Jejak Bakti & Duta</span>
+                            <span class="px-1.5 py-0.5 rounded text-[9px] bg-amber-400 text-slate-900 font-black uppercase">Juara</span>
+                        </a>
                     </div>
                 </div>
 
