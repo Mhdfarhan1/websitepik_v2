@@ -1,5 +1,7 @@
 /**
  * PIK-R REQUEST - Web Push Client Manager
+ * @version 6.0 - Universal Cross-Browser Support
+ * Supports: Chrome, Samsung Internet, Firefox, Edge, Opera (Android + Desktop)
  * Handles Service Worker registration, VAPID subscription, and status.
  */
 
@@ -16,6 +18,43 @@
         }
         return outputArray;
     }
+
+    /**
+     * Detect browsers that partially or fully don't support Web Push.
+     * Returns: 'unsupported_browser' | 'ios_safari' | 'ok'
+     */
+    function checkBrowserCompatibility() {
+        var ua = navigator.userAgent || '';
+
+        // UC Browser - no reliable SW/Push support
+        if (/UCBrowser|UCWeb|UCWEB/i.test(ua)) {
+            return 'unsupported_browser';
+        }
+
+        // Old Android WebView (not Chrome) - no push support
+        if (/wv\).*Version\/\d/i.test(ua) && !/Chrome/i.test(ua)) {
+            return 'unsupported_browser';
+        }
+
+        // In-app browser (Facebook, Instagram, TikTok, etc.)
+        if (/FBAN|FBAV|Instagram|musical_ly|TikTok/i.test(ua)) {
+            return 'unsupported_browser';
+        }
+
+        // Opera Mini - no SW support
+        if (/Opera Mini/i.test(ua)) {
+            return 'unsupported_browser';
+        }
+
+        // iOS Safari (Push only works in PWA mode iOS 16.4+)
+        if (/iPad|iPhone|iPod/i.test(ua) && !/CriOS|FxiOS|EdgiOS/i.test(ua)) {
+            return 'ios_safari';
+        }
+
+        return 'ok';
+    }
+
+    window._pikrBrowserCompat = checkBrowserCompatibility();
 
     const PikrWebPush = {
         swRegistration: null,
@@ -41,13 +80,12 @@
             this.isSupported = true;
 
             try {
-                // Register Service Worker and wait until ready
-                const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-                
-                // Force browser to check for updated SW on every page load
-                // Without this, browser can cache old SW for up to 24 hours
-                try { reg.update(); } catch(e) {}
-                
+                // Register Service Worker v6.0 and force immediate update check
+                const reg = await navigator.serviceWorker.register('/sw.js?v=6.0', { scope: '/' });
+
+                // Force browser to check for updated SW (works on Chrome, Samsung, Firefox)
+                try { await reg.update(); } catch(e) {}
+
                 this.swRegistration = await navigator.serviceWorker.ready;
 
                 // Check existing subscription

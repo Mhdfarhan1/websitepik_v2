@@ -247,9 +247,16 @@
                         return;
                     }
 
-                    // Check push support
-                    const hasSW = 'serviceWorker' in navigator;
-                    const hasPush = 'PushManager' in window;
+                    // Check browser compatibility (UC Browser, Facebook WebView, Opera Mini, etc.)
+                    const compat = window._pikrBrowserCompat || 'ok';
+                    if (compat === 'unsupported_browser' || compat === 'ios_safari') {
+                        this.state = 'unsupported';
+                        return;
+                    }
+
+                    // Check push API support
+                    const hasSW    = 'serviceWorker' in navigator;
+                    const hasPush  = 'PushManager' in window;
                     const hasNotif = typeof window.Notification !== 'undefined';
 
                     if (!hasSW || !hasPush || !hasNotif) {
