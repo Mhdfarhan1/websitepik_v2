@@ -1,8 +1,10 @@
 /**
  * Service Worker - PIK-R REQUEST Web Push Notifications
  * Website: PIK-R REQUEST SMAN 1 Tasik Putri Puyu
+ * @version 4.1 - Fixed notificationclick deep linking
  */
 
+const SW_VERSION = '4.1';
 const DEFAULT_ICON = '/assets/img/Logo_pikr.png';
 const DEFAULT_BADGE = '/assets/img/Logo_pikr.png';
 

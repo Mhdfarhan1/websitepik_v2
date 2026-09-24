@@ -42,12 +42,18 @@
 
             try {
                 // Register Service Worker and wait until ready
-                await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                
+                // Force browser to check for updated SW on every page load
+                // Without this, browser can cache old SW for up to 24 hours
+                try { reg.update(); } catch(e) {}
+                
                 this.swRegistration = await navigator.serviceWorker.ready;
 
                 // Check existing subscription
                 const subscription = await this.swRegistration.pushManager.getSubscription();
                 this.isSubscribed = !(subscription === null);
+
 
                 // Fetch VAPID public key
                 await this.fetchVapidKey();
