@@ -39,6 +39,7 @@
                             <div class="text-2xl font-black text-slate-800">{{ number_format($stats['active_subscribers'] ?? 0) }}</div>
                             <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Device Subscriber Aktif</div>
                         </div>
+
                     </div>
                     <button type="button" 
                             onclick="if(window.PikrWebPush){PikrWebPush.subscribe().then(s=>{if(s)location.reload();});}else{alert('WebPush belum siap');}" 
