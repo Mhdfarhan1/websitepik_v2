@@ -1,10 +1,10 @@
 /**
  * Service Worker - PIK-R REQUEST Web Push Notifications
  * Website: PIK-R REQUEST SMAN 1 Tasik Putri Puyu
- * @version 4.2 - Direct openWindow for Android background
+ * @version 4.3 - Focus Chrome window after openWindow
  */
 
-const SW_VERSION = '4.2';
+const SW_VERSION = '4.3';
 const DEFAULT_ICON = '/assets/img/Logo_pikr.png';
 const DEFAULT_BADGE = '/assets/img/Logo_pikr.png';
 
@@ -104,10 +104,29 @@ self.addEventListener('notificationclick', function(event) {
         fullUrl = self.registration.scope;
     }
 
-    // Directly open the URL - most reliable for Android when browser is closed
-    // clients.openWindow() is the ONLY method that works in background SW
+    // Directly open the URL + focus Chrome window to bring it to foreground
     event.waitUntil(
-        clients.openWindow(fullUrl)
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(windowClients) {
+            // If Chrome already has a window open, navigate it and bring to foreground
+            if (windowClients.length > 0) {
+                var client = windowClients[0];
+                try {
+                    client.navigate(fullUrl);
+                } catch(e) {}
+                if ('focus' in client) {
+                    return client.focus();
+                }
+            }
+            // No window open: open new tab and focus it (brings Chrome to foreground)
+            return clients.openWindow(fullUrl).then(function(newClient) {
+                if (newClient && 'focus' in newClient) {
+                    return newClient.focus();
+                }
+            });
+        }).catch(function() {
+            // Fallback: just open window
+            return clients.openWindow(fullUrl);
+        })
     );
 });
 
