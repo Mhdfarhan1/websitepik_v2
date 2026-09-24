@@ -13,8 +13,10 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Dancing+Script:wght@600;700&family=Montserrat:wght@800&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Dancing+Script:wght@600;700&family=Montserrat:wght@800&display=swap"
+        rel="stylesheet">
+
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- AOS Animation -->
@@ -47,14 +49,17 @@
         }
     </script>
     <style>
-        html, body {
+        html,
+        body {
             overflow-x: hidden;
             width: 100%;
             max-width: 100%;
             position: relative;
         }
 
-        [x-cloak] { display: none !important; }
+        [x-cloak] {
+            display: none !important;
+        }
 
         /* Glassmorphism Utilities */
         .glass-nav {
@@ -81,13 +86,16 @@
         ::-webkit-scrollbar {
             width: 8px;
         }
+
         ::-webkit-scrollbar-track {
             background: #f1f5f9;
         }
+
         ::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 10px;
         }
+
         ::-webkit-scrollbar-thumb:hover {
             background: #3b82f6;
         }
@@ -113,8 +121,15 @@
         }
 
         @keyframes slideDown {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .dropdown-menu {
@@ -165,6 +180,7 @@
             box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
         .glass-card-premium:hover {
             transform: translateY(-10px) scale(1.02);
             box-shadow: 0 30px 60px -20px rgba(59, 130, 246, 0.15);
@@ -177,19 +193,37 @@
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
         }
+
         @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         .floating {
             animation: float 6s ease-in-out infinite;
         }
+
         @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-            100% { transform: translateY(0px); }
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
         }
 
         /* Officer Card Specifics */
@@ -197,9 +231,11 @@
             position: relative;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
         .officer-card:hover {
             transform: translateY(-15px);
         }
+
         .glass-info {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
@@ -243,7 +279,7 @@
                 const nav = document.getElementById('main-nav');
                 const navContainer = document.getElementById('nav-container');
                 const topbar = document.getElementById('topbar');
-                
+
                 if (window.scrollY > 50) {
                     nav?.classList.add('shadow-md');
                     nav?.classList.remove('shadow-sm');
@@ -277,7 +313,7 @@
 
             // FAQ Accordion
             document.querySelectorAll('.faq-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const content = this.nextElementSibling;
                     const icon = this.querySelector('i');
                     content.classList.toggle('hidden');
@@ -309,9 +345,9 @@
                 document.body.style.overflow = '';
             }
 
-            if(btn) btn.addEventListener('click', openSidebar);
-            if(closeBtn) closeBtn.addEventListener('click', closeSidebar);
-            if(overlay) overlay.addEventListener('click', closeSidebar);
+            if (btn) btn.addEventListener('click', openSidebar);
+            if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+            if (overlay) overlay.addEventListener('click', closeSidebar);
 
             // Mobile Sidebar Dropdown toggle
             const mobileSidebarDropdownBtns = document.querySelectorAll('.mobile-sidebar-dropdown-btn');
@@ -321,7 +357,7 @@
                     e.stopPropagation();
                     const content = triggerRow.nextElementSibling;
                     const icon = dropdownBtn.querySelector('i');
-                    
+
                     if (content?.classList.contains('max-h-0')) {
                         content.classList.remove('max-h-0');
                         content.classList.add('max-h-[500px]');
@@ -391,7 +427,7 @@
                     const maxScroll = gallerySlider.scrollWidth - gallerySlider.clientWidth;
                     prevGalleryBtn.style.opacity = gallerySlider.scrollLeft <= 5 ? '0' : '1';
                     prevGalleryBtn.style.pointerEvents = gallerySlider.scrollLeft <= 5 ? 'none' : 'auto';
-                    
+
                     nextGalleryBtn.style.opacity = gallerySlider.scrollLeft >= maxScroll - 5 ? '0' : '1';
                     nextGalleryBtn.style.pointerEvents = gallerySlider.scrollLeft >= maxScroll - 5 ? 'none' : 'auto';
                 });
@@ -402,4 +438,5 @@
     <x-notifications.push-prompt-bottom />
     @stack('scripts')
 </body>
+
 </html>

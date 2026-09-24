@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +13,8 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- SweetAlert2 -->
@@ -35,17 +37,21 @@
             color: #1e293b;
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
+
         /* Custom scrollbar for dashboard */
         ::-webkit-scrollbar {
             width: 5px;
         }
+
         ::-webkit-scrollbar-track {
             background: #f1f5f9;
         }
+
         ::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 10px;
         }
+
         ::-webkit-scrollbar-thumb:hover {
             background: #3b82f6;
         }
@@ -61,6 +67,7 @@
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
+
         .no-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
@@ -83,35 +90,29 @@
     </style>
     @stack('styles')
 </head>
+
 <body class="antialiased">
     <!-- Instant Navigation Progress Bar -->
     <div id="page-progress-bar"></div>
 
     <x-dashboard.alert />
 
-    <div class="min-h-screen bg-[#f8fafc] flex" 
-         x-data="{ 
+    <div class="min-h-screen bg-[#f8fafc] flex" x-data="{ 
              sidebarOpen: localStorage.getItem('dashboard_sidebar_open') !== 'false', 
              mobileMenu: false, 
              isMobile: window.innerWidth < 1024 
-         }" 
-         x-init="
+         }" x-init="
              $watch('sidebarOpen', val => localStorage.setItem('dashboard_sidebar_open', val));
              isMobile = window.innerWidth < 1024; 
              if(isMobile) sidebarOpen = false;
-         " 
-         @resize.window="isMobile = window.innerWidth < 1024; if(isMobile) sidebarOpen = false">
-        
+         " @resize.window="isMobile = window.innerWidth < 1024; if(isMobile) sidebarOpen = false">
+
         <!-- Sidebar Backdrop (Mobile) -->
-        <div x-show="mobileMenu" 
-             x-transition:enter="transition-opacity ease-linear duration-200" 
-             x-transition:enter-start="opacity-0" 
-             x-transition:enter-end="opacity-100" 
-             x-transition:leave="transition-opacity ease-linear duration-200" 
-             x-transition:leave-start="opacity-100" 
-             x-transition:leave-end="opacity-0" 
-             @click="mobileMenu = false" 
-             class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] lg:hidden">
+        <div x-show="mobileMenu" x-transition:enter="transition-opacity ease-linear duration-200"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="transition-opacity ease-linear duration-200" x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0" @click="mobileMenu = false"
+            class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] lg:hidden">
         </div>
 
         <x-dashboard.sidebar />
@@ -167,7 +168,7 @@
             // Global helper to show processing alert on form submissions
             window.showProcessingAlert = function (form) {
                 if (!form) return;
-                
+
                 const method = (form.getAttribute('method') || 'GET').toUpperCase();
                 if (method === 'GET') return; // Skip GET forms (search / filter)
 
@@ -178,10 +179,10 @@
 
                 // Identify submit button & message
                 const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
-                const isDelete = (form.querySelector('input[name="_method"][value="DELETE"]') || 
-                                  (submitBtn && submitBtn.textContent.toLowerCase().includes('hapus')) ||
-                                  (form.action && (form.action.toLowerCase().includes('destroy') || form.action.toLowerCase().includes('delete'))));
-                
+                const isDelete = (form.querySelector('input[name="_method"][value="DELETE"]') ||
+                    (submitBtn && submitBtn.textContent.toLowerCase().includes('hapus')) ||
+                    (form.action && (form.action.toLowerCase().includes('destroy') || form.action.toLowerCase().includes('delete'))));
+
                 let titleText = 'Memproses Data...';
                 let subText = 'Sedang menyimpan data, mohon tunggu sebentar...';
 
@@ -243,4 +244,5 @@
     </script>
     @stack('scripts')
 </body>
+
 </html>

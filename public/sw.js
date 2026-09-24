@@ -84,29 +84,30 @@ self.addEventListener('notificationclick', (event) => {
         ? event.notification.data.url 
         : '/';
 
-    const fullUrl = new URL(targetUrl, self.location.origin).href;
+    // Build absolute URL - handle both relative and absolute URLs
+    let fullUrl;
+    try {
+        // If already absolute URL (starts with http/https), use as-is
+        if (/^https?:\/\//i.test(targetUrl)) {
+            fullUrl = targetUrl;
+        } else {
+            fullUrl = new URL(targetUrl, self.location.origin).href;
+        }
+    } catch (e) {
+        fullUrl = self.location.origin + '/';
+    }
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-            // Check if there is already an open tab with this URL
+            // Try to find an already-open tab with the exact target URL and focus it
             for (let i = 0; i < windowClients.length; i++) {
                 const client = windowClients[i];
                 if (client.url === fullUrl && 'focus' in client) {
                     return client.focus();
                 }
             }
-            // Check if there is an open window of this origin, navigate and focus
-            for (let i = 0; i < windowClients.length; i++) {
-                const client = windowClients[i];
-                if (client.url.startsWith(self.location.origin) && 'navigate' in client && 'focus' in client) {
-                    client.focus();
-                    return client.navigate(fullUrl);
-                }
-            }
-            // Otherwise open a new window/tab
-            if (clients.openWindow) {
-                return clients.openWindow(fullUrl);
-            }
+            // Always open a new window/tab to the target URL for reliable deep linking
+            return clients.openWindow(fullUrl);
         })
     );
 });
