@@ -1,10 +1,10 @@
 /**
  * Service Worker - PIK-R REQUEST Web Push Notifications
  * Website: PIK-R REQUEST SMAN 1 Tasik Putri Puyu
- * @version 4.1 - Fixed notificationclick deep linking
+ * @version 4.2 - Direct openWindow for Android background
  */
 
-const SW_VERSION = '4.1';
+const SW_VERSION = '4.2';
 const DEFAULT_ICON = '/assets/img/Logo_pikr.png';
 const DEFAULT_BADGE = '/assets/img/Logo_pikr.png';
 
@@ -74,7 +74,7 @@ self.addEventListener('push', (event) => {
 });
 
 // 4. Notification Click Event - When user clicks the push notification or its actions
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener('notificationclick', function(event) {
     event.notification.close();
 
     // If user clicked 'Tutup' action, just close
@@ -82,34 +82,32 @@ self.addEventListener('notificationclick', (event) => {
         return;
     }
 
-    const targetUrl = (event.notification.data && event.notification.data.url) 
-        ? event.notification.data.url 
-        : '/';
-
-    // Build absolute URL - handle both relative and absolute URLs
-    let fullUrl;
+    // Get target URL from notification data
+    var targetUrl = '/';
     try {
-        // If already absolute URL (starts with http/https), use as-is
+        if (event.notification.data && event.notification.data.url) {
+            targetUrl = event.notification.data.url;
+        }
+    } catch (e) {}
+
+    // Build absolute URL - works when browser is fully closed on Android
+    var fullUrl;
+    try {
         if (/^https?:\/\//i.test(targetUrl)) {
             fullUrl = targetUrl;
         } else {
-            fullUrl = new URL(targetUrl, self.location.origin).href;
+            // Use self.registration.scope as base for reliable origin detection
+            var origin = self.registration.scope.replace(/\/$/, '');
+            fullUrl = origin + (targetUrl.charAt(0) === '/' ? targetUrl : '/' + targetUrl);
         }
     } catch (e) {
-        fullUrl = self.location.origin + '/';
+        fullUrl = self.registration.scope;
     }
 
+    // Directly open the URL - most reliable for Android when browser is closed
+    // clients.openWindow() is the ONLY method that works in background SW
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-            // Try to find an already-open tab with the exact target URL and focus it
-            for (let i = 0; i < windowClients.length; i++) {
-                const client = windowClients[i];
-                if (client.url === fullUrl && 'focus' in client) {
-                    return client.focus();
-                }
-            }
-            // Always open a new window/tab to the target URL for reliable deep linking
-            return clients.openWindow(fullUrl);
-        })
+        clients.openWindow(fullUrl)
     );
 });
+
