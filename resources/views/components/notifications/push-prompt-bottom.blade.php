@@ -201,15 +201,20 @@
                         }
                     } catch (e) {}
 
-                    // If already granted and subscribed, don't nag
-                    if (permission === 'granted' && window.PikrWebPush && window.PikrWebPush.isSubscribed && !forceShow) {
+                    // If already granted in browser or already subscribed, NEVER show popup on reload/relog!
+                    if ((permission === 'granted' || localStorage.getItem('pikr_push_subscribed') === 'true') && !forceShow) {
                         return;
                     }
 
-                    // Display prompt after a brief 600ms entrance delay
+                    // If explicitly denied, don't nag user unless forced with ?notif=1
+                    if (permission === 'denied' && !forceShow) {
+                        return;
+                    }
+
+                    // Display prompt after a brief 700ms entrance delay only for undecided users
                     setTimeout(() => {
                         this.show = true;
-                    }, 600);
+                    }, 700);
                 },
                 dismissPrompt() {
                     this.show = false;

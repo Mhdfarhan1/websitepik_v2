@@ -41,8 +41,9 @@
             this.isSupported = true;
 
             try {
-                // Register Service Worker
-                this.swRegistration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                // Register Service Worker and wait until ready
+                await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                this.swRegistration = await navigator.serviceWorker.ready;
 
                 // Check existing subscription
                 const subscription = await this.swRegistration.pushManager.getSubscription();
@@ -53,7 +54,11 @@
 
                 // If user granted permission previously and subscription exists, sync with server
                 if (this.isSubscribed && subscription) {
-                    this.sendSubscriptionToServer(subscription);
+                    await this.sendSubscriptionToServer(subscription);
+                } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                    // Permission already granted but subscription missing in browser: auto-subscribe in background!
+                    console.log('[WebPush] Permission granted, auto-subscribing in background...');
+                    await this.subscribe(true);
                 }
 
                 this.updateUI();
@@ -203,26 +208,50 @@
         },
 
         async sendSubscriptionToServer(subscription) {
-            const rawKey = subscription.getKey ? subscription.getKey('p256dh') : null;
-            const rawAuth = subscription.getKey ? subscription.getKey('auth') : null;
+            try {
+                const json = subscription.toJSON ? subscription.toJSON() : {};
+                const rawKey = subscription.getKey ? subscription.getKey('p256dh') : null;
+                const rawAuth = subscription.getKey ? subscription.getKey('auth') : null;
 
-            const subData = {
-                endpoint: subscription.endpoint,
-                keys: {
-                    p256dh: rawKey ? btoa(String.fromCharCode.apply(null, new Uint8Array(rawKey))) : '',
-                    auth: rawAuth ? btoa(String.fromCharCode.apply(null, new Uint8Array(rawAuth))) : ''
-                },
-                contentEncoding: (PushManager.supportedContentEncodings || ['aesgcm'])[0]
-            };
+                const p256dh = (json.keys && json.keys.p256dh)
+                    ? json.keys.p256dh
+                    : (rawKey ? btoa(String.fromCharCode.apply(null, new Uint8Array(rawKey))) : '');
 
-            await fetch('/api/push-subscriptions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                },
-                body: JSON.stringify(subData)
-            });
+                const auth = (json.keys && json.keys.auth)
+                    ? json.keys.auth
+                    : (rawAuth ? btoa(String.fromCharCode.apply(null, new Uint8Array(rawAuth))) : '');
+
+                const subData = {
+                    endpoint: subscription.endpoint,
+                    keys: {
+                        p256dh: p256dh,
+                        auth: auth
+                    },
+                    contentEncoding: (PushManager.supportedContentEncodings || ['aesgcm'])[0]
+                };
+
+                const res = await fetch('/api/push-subscriptions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify(subData)
+                });
+
+                const data = await res.json();
+                if (data.status === 'success') {
+                    console.log('[WebPush] Subscription saved successfully:', data);
+                    localStorage.setItem('pikr_push_subscribed', 'true');
+                    this.isSubscribed = true;
+                    this.updateUI();
+                } else {
+                    console.warn('[WebPush] Server returned notice:', data);
+                }
+            } catch (err) {
+                console.error('[WebPush] Failed sending subscription to server:', err);
+            }
         },
 
         updateUI() {
@@ -335,15 +364,20 @@
                     }
                 } catch (e) {}
 
-                // If already granted and subscribed, don't nag
-                if (permission === 'granted' && window.PikrWebPush && window.PikrWebPush.isSubscribed && !forceShow) {
+                // If already granted in browser or already subscribed, NEVER show popup on reload/relog!
+                if ((permission === 'granted' || localStorage.getItem('pikr_push_subscribed') === 'true') && !forceShow) {
                     return;
                 }
 
-                // Display prompt after a brief 600ms entrance delay
+                // If explicitly denied, don't nag user unless forced with ?notif=1
+                if (permission === 'denied' && !forceShow) {
+                    return;
+                }
+
+                // Display prompt after a brief 700ms entrance delay only for undecided users
                 setTimeout(() => {
                     this.show = true;
-                }, 600);
+                }, 700);
             },
             dismissPrompt() {
                 this.show = false;
