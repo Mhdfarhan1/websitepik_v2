@@ -23,7 +23,7 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Web Push & Notification Client -->
-    <script src="{{ asset('assets/js/web-push-client.js') }}?v=2.2"></script>
+    <script src="{{ route('webpush.client-script') }}?v=3.0"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>

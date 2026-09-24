@@ -127,7 +127,7 @@
         </main>
     </div>
 
-    <script src="{{ asset('assets/js/web-push-client.js') }}?v=2.2"></script>
+    <script src="{{ route('webpush.client-script') }}?v=3.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {

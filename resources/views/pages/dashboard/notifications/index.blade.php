@@ -42,7 +42,8 @@
 
                     </div>
                     <button type="button" 
-                            onclick="if(window.PikrWebPush){PikrWebPush.subscribe().then(s=>{if(s)location.reload();});}else{alert('WebPush belum siap');}" 
+                            id="btn-subscribe-admin-browser"
+                            onclick="subscribeThisBrowser()" 
                             class="w-full py-1.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-[11px] transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
                         <i class="fas fa-bell"></i>
                         <span>+ Hubungkan Browser Ini</span>
@@ -440,6 +441,30 @@
                     </div>
                 @endif
             </div>
-        </div>
     </div>
+
+    <script>
+        async function subscribeThisBrowser() {
+            const btn = document.getElementById('btn-subscribe-admin-browser');
+            if (btn) btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Menghubungkan...';
+
+            try {
+                if (window.PikrWebPush) {
+                    const success = await window.PikrWebPush.subscribe(false);
+                    if (success) {
+                        if (btn) btn.innerHTML = '<i class="fas fa-check text-emerald-500"></i> Terhubung!';
+                        setTimeout(() => location.reload(), 1200);
+                    } else {
+                        if (btn) btn.innerHTML = '<i class="fas fa-bell"></i> + Hubungkan Browser Ini';
+                    }
+                } else {
+                    alert('Sistem Web Push sedang menginisialisasi. Silakan klik kembali.');
+                    if (btn) btn.innerHTML = '<i class="fas fa-bell"></i> + Hubungkan Browser Ini';
+                }
+            } catch (err) {
+                alert('Gagal menghubungkan: ' + err.message);
+                if (btn) btn.innerHTML = '<i class="fas fa-bell"></i> + Hubungkan Browser Ini';
+            }
+        }
+    </script>
 </x-layouts.dashboard>

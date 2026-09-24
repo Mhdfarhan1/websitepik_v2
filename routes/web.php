@@ -431,9 +431,9 @@ Route::get('/storage/{path}', function (string $path) {
 |--------------------------------------------------------------------------
 */
 Route::get('/sw.js', function () {
-    $path = public_path('sw.js');
+    $path = base_path('public/sw.js');
     if (!file_exists($path)) {
-        $path = base_path('public/sw.js');
+        $path = public_path('sw.js');
     }
     if (file_exists($path)) {
         return response(file_get_contents($path), 200, [
@@ -444,6 +444,20 @@ Route::get('/sw.js', function () {
     }
     abort(404);
 })->name('service-worker');
+
+Route::get('/webpush/client.js', function () {
+    $path = base_path('public/assets/js/web-push-client.js');
+    if (!file_exists($path)) {
+        $path = public_path('assets/js/web-push-client.js');
+    }
+    if (file_exists($path)) {
+        return response(file_get_contents($path), 200, [
+            'Content-Type' => 'application/javascript; charset=utf-8',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        ]);
+    }
+    abort(404);
+})->name('webpush.client-script');
 
 Route::get('/assets/{path}', function (string $path) {
     $cleanPath = str_replace(['../', '..\\'], '', $path);
