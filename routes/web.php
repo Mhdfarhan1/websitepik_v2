@@ -425,6 +425,51 @@ Route::get('/storage/{path}', function (string $path) {
     abort(404);
 })->where('path', '.*')->name('media.storage');
 
+/*
+|--------------------------------------------------------------------------
+| Service Worker & Assets Fallback Routes (Anti-Broken JS/CSS on Shared Hosting)
+|--------------------------------------------------------------------------
+*/
+Route::get('/sw.js', function () {
+    $path = public_path('sw.js');
+    if (!file_exists($path)) {
+        $path = base_path('public/sw.js');
+    }
+    if (file_exists($path)) {
+        return response(file_get_contents($path), 200, [
+            'Content-Type' => 'application/javascript; charset=utf-8',
+            'Service-Worker-Allowed' => '/',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        ]);
+    }
+    abort(404);
+})->name('service-worker');
+
+Route::get('/assets/{path}', function (string $path) {
+    $cleanPath = str_replace(['../', '..\\'], '', $path);
+    $file = public_path('assets/' . $cleanPath);
+    if (!file_exists($file)) {
+        $file = base_path('public/assets/' . $cleanPath);
+    }
+    if (file_exists($file) && is_file($file)) {
+        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        $mime = match ($ext) {
+            'js' => 'application/javascript; charset=utf-8',
+            'css' => 'text/css; charset=utf-8',
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'svg' => 'image/svg+xml',
+            'webp' => 'image/webp',
+            default => mime_content_type($file) ?: 'text/plain',
+        };
+        return response(file_get_contents($file), 200, [
+            'Content-Type' => $mime,
+            'Cache-Control' => 'public, max-age=31536000',
+        ]);
+    }
+    abort(404);
+})->where('path', '.*')->name('assets.fallback');
+
 // Preview Maintenance Page
 Route::get('/preview-maintenance', function () {
     return response()->view('errors.503', [], 503);

@@ -116,3 +116,64 @@
 
     </div>
 </div>
+
+<script>
+    if (typeof window.pikrPushPromptBottom === 'undefined') {
+        window.pikrPushPromptBottom = function() {
+            return {
+                show: false,
+                state: 'prompt',
+                initPrompt() {
+                    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+                        return;
+                    }
+                    if (Notification.permission === 'granted' || Notification.permission === 'denied') {
+                        return;
+                    }
+                    const dismissedAt = localStorage.getItem('pikr_push_prompt_dismissed');
+                    if (dismissedAt) {
+                        const hoursPassed = (Date.now() - parseInt(dismissedAt, 10)) / (1000 * 60 * 60);
+                        if (hoursPassed < 48) {
+                            return;
+                        }
+                    }
+                    setTimeout(() => {
+                        if (Notification.permission === 'default') {
+                            this.show = true;
+                        }
+                    }, 2000);
+                },
+                dismissPrompt() {
+                    this.show = false;
+                    localStorage.setItem('pikr_push_prompt_dismissed', Date.now().toString());
+                },
+                async enablePush() {
+                    this.state = 'loading';
+                    try {
+                        if (window.PikrWebPush) {
+                            const success = await window.PikrWebPush.subscribe(true);
+                            if (success) {
+                                this.state = 'success';
+                                localStorage.removeItem('pikr_push_prompt_dismissed');
+                                setTimeout(() => { this.show = false; }, 2200);
+                            } else {
+                                this.state = Notification.permission === 'denied' ? 'denied' : 'prompt';
+                            }
+                        } else {
+                            const permission = await Notification.requestPermission();
+                            if (permission === 'granted') {
+                                this.state = 'success';
+                                setTimeout(() => { this.show = false; }, 2000);
+                            } else {
+                                this.state = 'denied';
+                            }
+                        }
+                    } catch (e) {
+                        this.state = 'prompt';
+                        this.show = false;
+                    }
+                }
+            };
+        };
+    }
+</script>
