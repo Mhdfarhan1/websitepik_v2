@@ -62,7 +62,7 @@ Route::get('/profil/sejarah', function (\App\Services\ProfileService $profileSer
 Route::get('/profil/jejak-bakti', function (\Illuminate\Http\Request $request, \App\Services\TributeService $tributeService) {
     $editions = $tributeService->getAllEditions(true);
     $selectedPeriod = $request->query('periode');
-    
+
     if ($selectedPeriod) {
         $activeEdition = $editions->firstWhere('period', $selectedPeriod) ?? $editions->first();
     } else {
@@ -294,9 +294,9 @@ Route::middleware(['auth', 'force_password'])->prefix('dashboard')->name('dashbo
 Route::middleware(['auth', 'role:super_admin'])->prefix('dashboard')->name('dashboard.')->group(function () {
     Route::get('/menu-settings', [MenuSettingController::class, 'index'])->name('menu-settings.index');
     Route::put('/menu-settings', [MenuSettingController::class, 'update'])->name('menu-settings.update');
-    
+
     // User Management
-    Route::get('/users', function() {
+    Route::get('/users', function () {
         return redirect()->route('dashboard.users.pembina');
     });
     Route::get('/users/pembina', [UserController::class, 'pembinaIndex'])->name('users.pembina');
@@ -326,7 +326,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('dashboard')->name('dash
     Route::post('/peer-evaluation/schedules', [PeerEvaluationAdminController::class, 'storeSchedule'])->name('peer-evaluation.schedules.store');
     Route::post('/peer-evaluation/schedules/{id}/toggle', [PeerEvaluationAdminController::class, 'toggleScheduleActive'])->name('peer-evaluation.schedules.toggle');
     Route::delete('/peer-evaluation/schedules/{id}', [PeerEvaluationAdminController::class, 'destroySchedule'])->name('peer-evaluation.schedules.destroy');
-    
+
     Route::post('/peer-evaluation/questions', [PeerEvaluationAdminController::class, 'storeQuestion'])->name('peer-evaluation.questions.store');
     Route::put('/peer-evaluation/questions/{id}', [PeerEvaluationAdminController::class, 'updateQuestion'])->name('peer-evaluation.questions.update');
     Route::delete('/peer-evaluation/questions/{id}', [PeerEvaluationAdminController::class, 'destroyQuestion'])->name('peer-evaluation.questions.destroy');
@@ -377,7 +377,8 @@ Route::get('/uploads/{path}', function (string $path) {
                 @mkdir($destDir, 0755, true);
             }
             @copy($file2, $file1);
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         return response()->file($file2, [
             'Cache-Control' => 'public, max-age=31536000, immutable',
