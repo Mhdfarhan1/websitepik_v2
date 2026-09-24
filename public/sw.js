@@ -1,30 +1,28 @@
 /**
  * Service Worker - PIK-R REQUEST Web Push Notifications
  * Website: PIK-R REQUEST SMAN 1 Tasik Putri Puyu
- * @version 4.3 - Focus Chrome window after openWindow
+ * @version 5.0 - Samsung Internet compatible, no action buttons
  */
 
-const SW_VERSION = '4.3';
+const SW_VERSION = '5.0';
 const DEFAULT_ICON = '/assets/img/Logo_pikr.png';
 const DEFAULT_BADGE = '/assets/img/Logo_pikr.png';
 
-// 1. Install Event
-self.addEventListener('install', (event) => {
+// 1. Install Event - take over immediately
+self.addEventListener('install', function(event) {
     self.skipWaiting();
 });
 
-// 2. Activate Event
-self.addEventListener('activate', (event) => {
+// 2. Activate Event - claim all clients immediately
+self.addEventListener('activate', function(event) {
     event.waitUntil(self.clients.claim());
 });
 
-// 3. Push Event - When server sends Web Push
-self.addEventListener('push', (event) => {
-    if (!event.data) {
-        return;
-    }
+// 3. Push Event - receive push from server
+self.addEventListener('push', function(event) {
+    if (!event.data) return;
 
-    let payload;
+    var payload;
     try {
         payload = event.data.json();
     } catch (e) {
@@ -32,40 +30,33 @@ self.addEventListener('push', (event) => {
             title: 'PIK-R REQUEST 🔔',
             body: event.data.text(),
             url: '/',
-            icon: DEFAULT_ICON,
-            badge: DEFAULT_BADGE,
             type: 'informasi'
         };
     }
 
-    const title = payload.title || 'PIK-R REQUEST 🔔';
-    
-    // Notification options - tailored for mobile Android & desktop (WhatsApp style)
-    const options = {
-        body: payload.body || 'Ada pembaruan konten terbaru di website PIK-R REQUEST.',
-        icon: payload.icon || DEFAULT_ICON,
-        badge: payload.badge || DEFAULT_BADGE,
-        vibrate: [250, 100, 250, 100, 250], // Pola getar HP seperti pesan masuk
-        tag: 'pikr-notif-' + (payload.id || Date.now()),
+    var title = payload.title || 'PIK-R REQUEST 🔔';
+    var body  = payload.body  || 'Ada pembaruan konten terbaru di website PIK-R REQUEST.';
+    var icon  = payload.icon  || DEFAULT_ICON;
+    var badge = payload.badge || DEFAULT_BADGE;
+    var url   = payload.url   || '/';
+
+    // IMPORTANT: No 'actions' array - Samsung Internet doesn't support it properly
+    // Tapping the notification body is the only reliable action
+    var options = {
+        body: body,
+        icon: icon,
+        badge: badge,
+        vibrate: [200, 100, 200],
+        tag: 'pikr-' + (payload.id || Date.now()),
         renotify: true,
         requireInteraction: false,
         silent: false,
         data: {
-            url: payload.url || '/',
+            url: url,
             id: payload.id || null,
-            type: payload.type || 'informasi',
-            timestamp: payload.timestamp || Date.now()
-        },
-        actions: [
-            {
-                action: 'open_url',
-                title: 'Lihat Detail ↗'
-            },
-            {
-                action: 'dismiss',
-                title: 'Tutup'
-            }
-        ]
+            type: payload.type || 'informasi'
+        }
+        // No 'actions' - removed for Samsung Internet compatibility
     };
 
     event.waitUntil(
@@ -73,60 +64,63 @@ self.addEventListener('push', (event) => {
     );
 });
 
-// 4. Notification Click Event - When user clicks the push notification or its actions
+// 4. Notification Click - open target URL when tapping notification
 self.addEventListener('notificationclick', function(event) {
+    // Close the notification immediately
     event.notification.close();
 
-    // If user clicked 'Tutup' action, just close
-    if (event.action === 'dismiss') {
-        return;
-    }
-
-    // Get target URL from notification data
+    // Get the target URL
     var targetUrl = '/';
     try {
         if (event.notification.data && event.notification.data.url) {
             targetUrl = event.notification.data.url;
         }
-    } catch (e) {}
+    } catch(e) {}
 
-    // Build absolute URL - works when browser is fully closed on Android
-    var fullUrl;
+    // Build absolute URL
+    var fullUrl = targetUrl;
     try {
-        if (/^https?:\/\//i.test(targetUrl)) {
-            fullUrl = targetUrl;
-        } else {
-            // Use self.registration.scope as base for reliable origin detection
-            var origin = self.registration.scope.replace(/\/$/, '');
-            fullUrl = origin + (targetUrl.charAt(0) === '/' ? targetUrl : '/' + targetUrl);
+        if (!/^https?:\/\//i.test(targetUrl)) {
+            var base = self.registration.scope.replace(/\/$/, '');
+            fullUrl = base + (targetUrl.charAt(0) === '/' ? targetUrl : '/' + targetUrl);
         }
-    } catch (e) {
+    } catch(e) {
         fullUrl = self.registration.scope;
     }
 
-    // Directly open the URL + focus Chrome window to bring it to foreground
+    // Open the URL - Samsung Internet compatible approach
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(windowClients) {
-            // If Chrome already has a window open, navigate it and bring to foreground
-            if (windowClients.length > 0) {
-                var client = windowClients[0];
-                try {
-                    client.navigate(fullUrl);
-                } catch(e) {}
-                if ('focus' in client) {
-                    return client.focus();
+        self.clients.matchAll({
+            type: 'window',
+            includeUncontrolled: true
+        }).then(function(clientList) {
+            // Find an existing window/tab of this browser
+            var existingClient = null;
+            for (var i = 0; i < clientList.length; i++) {
+                if (clientList[i].visibilityState === 'visible') {
+                    existingClient = clientList[i];
+                    break;
                 }
             }
-            // No window open: open new tab and focus it (brings Chrome to foreground)
-            return clients.openWindow(fullUrl).then(function(newClient) {
-                if (newClient && 'focus' in newClient) {
-                    return newClient.focus();
-                }
-            });
+            if (!existingClient && clientList.length > 0) {
+                existingClient = clientList[0];
+            }
+
+            if (existingClient) {
+                // Browser already open: navigate to URL and bring to foreground
+                return existingClient.navigate(fullUrl).then(function(client) {
+                    if (client && client.focus) return client.focus();
+                }).catch(function() {
+                    // navigate() failed (e.g. cross-origin), open new window
+                    return self.clients.openWindow(fullUrl);
+                });
+            }
+
+            // Browser closed: open new window (Android will launch the browser)
+            return self.clients.openWindow(fullUrl);
         }).catch(function() {
-            // Fallback: just open window
-            return clients.openWindow(fullUrl);
+            // Last resort fallback
+            return self.clients.openWindow(fullUrl);
         })
     );
 });
-
