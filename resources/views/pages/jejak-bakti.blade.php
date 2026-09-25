@@ -1,8 +1,44 @@
 <x-layouts.app title="Jejak Bakti & Museum Duta GenRe | PIK-R REQUEST">
+    @php
+        $figuresDataJson = ($activeEdition && $activeEdition->figures) ? $activeEdition->figures->values()->map(function($f) {
+            return [
+                'id' => $f->id,
+                'name' => $f->name,
+                'honor_title' => $f->honor_title,
+                'period' => $f->period,
+                'badge_color' => $f->badge_color ?? 'amber',
+                'photo' => $f->photo ? asset($f->photo) : null,
+                'quote' => trim($f->quote ?? '', " \t\n\r\0\x0B\"'“”"),
+                'contribution' => $f->contribution,
+                'instagram' => $f->instagram ? ltrim($f->instagram, '@') : null,
+            ];
+        })->toArray() : [];
+    @endphp
+
     <div class="relative min-h-screen pt-20 bg-slate-50"
          x-data="{
              lightboxOpen: false,
              storyModalOpen: {{ request('baca') === 'kisah' ? 'true' : 'false' }},
+             figureModalOpen: false,
+             selectedFigureIndex: 0,
+             figuresList: @js($figuresDataJson),
+             get selectedFigure() {
+                 return this.figuresList[this.selectedFigureIndex] || null;
+             },
+             openFigureDetail(idx) {
+                 this.selectedFigureIndex = idx;
+                 this.figureModalOpen = true;
+             },
+             nextFigure() {
+                 if (this.figuresList.length > 0) {
+                     this.selectedFigureIndex = (this.selectedFigureIndex + 1) % this.figuresList.length;
+                 }
+             },
+             prevFigure() {
+                 if (this.figuresList.length > 0) {
+                     this.selectedFigureIndex = (this.selectedFigureIndex - 1 + this.figuresList.length) % this.figuresList.length;
+                 }
+             },
              appreciationCount: {{ (int)($activeEdition ? $activeEdition->appreciation_count : 0) }},
              hasAppreciated: false,
              audioPlaying: false,
@@ -378,6 +414,11 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
                         @forelse($activeEdition->figures as $fig)
+                            @php
+                                $rawQuote = trim($fig->quote ?? '');
+                                $cleanQuote = trim($rawQuote, " \t\n\r\0\x0B\"'“”");
+                                $isLongQuote = mb_strlen($cleanQuote) > 130;
+                            @endphp
                             <div class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between group">
                                 <div class="p-5 sm:p-7 space-y-4 sm:space-y-5">
                                     <!-- Top Tag -->
@@ -398,16 +439,24 @@
 
                                     <!-- Photo / Avatar & Name -->
                                     <div class="flex items-center gap-4">
-                                        <div class="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-tr from-[#17385c] to-blue-600 flex items-center justify-center font-black text-white text-xl shrink-0 shadow-md group-hover:scale-105 transition-transform">
+                                        <button type="button" 
+                                                @click="openFigureDetail({{ $loop->index }})"
+                                                class="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-tr from-[#17385c] to-blue-600 flex items-center justify-center font-black text-white text-xl shrink-0 shadow-md group-hover:scale-105 transition-transform text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                                                title="Klik untuk melihat profil {{ $fig->name }}">
                                             @if($fig->photo)
                                                 <img src="{{ asset($fig->photo) }}" alt="{{ $fig->name }}" class="w-full h-full object-cover">
                                             @else
                                                 <span>{{ strtoupper(substr($fig->name, 0, 2)) }}</span>
                                             @endif
-                                        </div>
-                                        <div>
-                                            <h3 class="font-extrabold text-slate-900 text-lg group-hover:text-blue-600 transition-colors">{{ $fig->name }}</h3>
-                                            <p class="text-xs font-semibold text-slate-400 mt-0.5">{{ $fig->honor_title }}</p>
+                                        </button>
+                                        <div class="min-w-0">
+                                            <button type="button" 
+                                                    @click="openFigureDetail({{ $loop->index }})"
+                                                    class="font-extrabold text-slate-900 text-lg group-hover:text-blue-600 transition-colors text-left truncate block max-w-full cursor-pointer focus:outline-none hover:underline"
+                                                    title="Klik untuk melihat profil {{ $fig->name }}">
+                                                {{ $fig->name }}
+                                            </button>
+                                            <p class="text-xs font-semibold text-slate-400 mt-0.5 truncate">{{ $fig->honor_title }}</p>
                                             @if($fig->instagram)
                                                 <a href="https://instagram.com/{{ ltrim($fig->instagram, '@') }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] text-pink-600 font-bold hover:underline mt-1">
                                                     <i class="fab fa-instagram"></i>
@@ -418,10 +467,31 @@
                                     </div>
 
                                     <!-- Quotes -->
-                                    @if($fig->quote)
-                                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-slate-600 text-xs sm:text-sm italic leading-relaxed relative">
-                                            <i class="fas fa-quote-left text-slate-300 absolute top-2 right-2 text-sm"></i>
-                                            "{{ $fig->quote }}"
+                                    @if($cleanQuote)
+                                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-slate-600 text-xs sm:text-sm italic leading-relaxed relative flex flex-col justify-between transition-colors hover:bg-slate-100/70 hover:border-slate-200">
+                                            <i class="fas fa-quote-left text-slate-300 absolute top-2.5 right-3 text-sm"></i>
+                                            
+                                            @if($isLongQuote)
+                                                <div>
+                                                    <p class="line-clamp-3 text-slate-600 font-normal">
+                                                        “{{ $cleanQuote }}”
+                                                    </p>
+                                                    <div class="mt-3 pt-2.5 border-t border-slate-200/80 flex items-center justify-between">
+                                                        <button type="button" 
+                                                                @click="openFigureDetail({{ $loop->index }})"
+                                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#17385c] hover:text-blue-700 text-xs font-extrabold transition-all cursor-pointer shadow-2xs group/btn active:scale-95">
+                                                            <i class="fas fa-book-reader text-amber-500 text-xs"></i>
+                                                            <span>Lihat Detail Cerita</span>
+                                                            <i class="fas fa-arrow-right text-[10px] text-blue-500 group-hover/btn:translate-x-0.5 transition-transform"></i>
+                                                        </button>
+                                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kisah Lengkap</span>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <p class="text-slate-600 font-normal">
+                                                    “{{ $cleanQuote }}”
+                                                </p>
+                                            @endif
                                         </div>
                                     @endif
 
@@ -429,13 +499,19 @@
                                     @if($fig->contribution)
                                         <div class="space-y-1">
                                             <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider block">Jasa & Advokasi:</span>
-                                            <p class="text-xs text-slate-600 leading-relaxed font-medium">{{ $fig->contribution }}</p>
+                                            <p class="text-xs text-slate-600 leading-relaxed font-medium line-clamp-2">{{ $fig->contribution }}</p>
                                         </div>
                                     @endif
                                 </div>
 
-                                <div class="px-7 py-3.5 bg-slate-50 border-t border-slate-100 text-center">
-                                    <span class="text-[11px] font-bold text-slate-500">Kader Inspiratif PIK-R REQUEST</span>
+                                <div class="px-7 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                                    <span>Kader Inspiratif PIK-R REQUEST</span>
+                                    <button type="button" 
+                                            @click="openFigureDetail({{ $loop->index }})" 
+                                            class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-extrabold hover:underline cursor-pointer">
+                                        <span>{{ $isLongQuote ? 'Detail Cerita' : 'Lihat Profil' }}</span>
+                                        <i class="fas fa-chevron-right text-[9px]"></i>
+                                    </button>
                                 </div>
                             </div>
                         @empty
@@ -603,6 +679,149 @@
                 </div>
             </div>
             @endif
+
+            <!-- Interactive Figure Story & Profile Detail Modal -->
+            <div x-show="figureModalOpen" 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 @keydown.escape.window="figureModalOpen = false"
+                 @keydown.arrow-left.window="if(figureModalOpen) prevFigure()"
+                 @keydown.arrow-right.window="if(figureModalOpen) nextFigure()"
+                 class="fixed inset-0 z-[125] bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden"
+                 style="display: none;">
+                
+                <div @click.away="figureModalOpen = false" 
+                     class="relative w-full max-w-2xl bg-white rounded-t-[2.5rem] sm:rounded-[2rem] shadow-2xl border border-slate-200/80 flex flex-col max-h-[92vh] sm:max-h-[88vh] overflow-hidden">
+                    
+                    <!-- Modal Header with Prestige Gradient -->
+                    <div class="relative overflow-hidden bg-gradient-to-r from-slate-900 via-[#17385c] to-blue-900 text-white p-5 sm:p-7 shrink-0 border-b border-white/10">
+                        <!-- Decorative background glow -->
+                        <div class="absolute -top-16 -right-16 w-44 h-44 bg-amber-400/15 rounded-full blur-3xl pointer-events-none"></div>
+                        <div class="absolute -bottom-16 -left-16 w-44 h-44 bg-blue-400/15 rounded-full blur-3xl pointer-events-none"></div>
+
+                        <!-- Top row: Badges & Close Button -->
+                        <div class="relative z-10 flex items-center justify-between gap-3 mb-4">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30"
+                                      x-text="selectedFigure?.honor_title">
+                                </span>
+                                <template x-if="selectedFigure?.period">
+                                    <span class="px-2.5 py-0.5 rounded-full bg-white/10 text-slate-300 text-[11px] font-bold"
+                                          x-text="'Tahun ' + selectedFigure.period">
+                                    </span>
+                                </template>
+                            </div>
+
+                            <button @click="figureModalOpen = false" 
+                                    class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 text-white/90 hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-sm"
+                                    title="Tutup (Esc)">
+                                <i class="fas fa-times text-xs sm:text-sm"></i>
+                            </button>
+                        </div>
+
+                        <!-- Figure Profile Header Info -->
+                        <div class="relative z-10 flex items-center gap-4 sm:gap-5">
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/15 bg-gradient-to-tr from-[#17385c] to-blue-600 flex items-center justify-center font-black text-white text-xl sm:text-2xl shrink-0">
+                                <template x-if="selectedFigure?.photo">
+                                    <img :src="selectedFigure.photo" :alt="selectedFigure.name" class="w-full h-full object-cover">
+                                </template>
+                                <template x-if="!selectedFigure?.photo">
+                                    <span x-text="selectedFigure?.name ? selectedFigure.name.substring(0, 2).toUpperCase() : ''"></span>
+                                </template>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="text-lg sm:text-2xl font-black text-white leading-tight truncate" x-text="selectedFigure?.name"></h3>
+                                <p class="text-xs sm:text-sm text-amber-300 font-semibold mt-0.5 truncate" x-text="selectedFigure?.honor_title"></p>
+                                
+                                <template x-if="selectedFigure?.instagram">
+                                    <div class="mt-2">
+                                        <a :href="'https://instagram.com/' + selectedFigure.instagram" target="_blank" 
+                                           class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border border-pink-400/30 text-[11px] font-bold transition-all shadow-2xs">
+                                            <i class="fab fa-instagram"></i>
+                                            <span x-text="'@' + selectedFigure.instagram"></span>
+                                        </a>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Scrollable Reader Content -->
+                    <div class="p-5 sm:p-7 md:p-8 overflow-y-auto space-y-5 text-slate-700 font-normal leading-relaxed text-sm sm:text-base overscroll-contain">
+                        
+                        <!-- Section Indicator -->
+                        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                            <div class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#17385c]">
+                                <i class="fas fa-feather-alt text-amber-500"></i>
+                                <span>Kisah & Pesan Inspiratif</span>
+                            </div>
+                            <template x-if="figuresList.length > 1">
+                                <span class="text-[11px] font-bold text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full" 
+                                      x-text="(selectedFigureIndex + 1) + ' dari ' + figuresList.length + ' Duta'">
+                                </span>
+                            </template>
+                        </div>
+
+                        <!-- Story Quote Card -->
+                        <template x-if="selectedFigure?.quote">
+                            <div class="relative bg-gradient-to-b from-amber-50/40 via-white to-slate-50/70 p-5 sm:p-7 rounded-2xl border border-amber-200/60 shadow-inner">
+                                <i class="fas fa-quote-right text-amber-400/15 text-5xl sm:text-6xl absolute top-4 right-5 pointer-events-none select-none"></i>
+                                <div class="relative z-10 text-slate-700 text-sm sm:text-[15.5px] leading-relaxed sm:leading-loose whitespace-pre-line font-medium italic"
+                                     x-text="'“' + selectedFigure.quote + '”'">
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Jasa & Kontribusi Block -->
+                        <template x-if="selectedFigure?.contribution">
+                            <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+                                <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                                    <i class="fas fa-award text-amber-500 text-xs"></i>
+                                    <span>Jasa, Advokasi & Kontribusi:</span>
+                                </div>
+                                <p class="text-xs sm:text-sm text-slate-700 leading-relaxed font-semibold" x-text="selectedFigure.contribution"></p>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Modal Footer Navigation & Actions -->
+                    <div class="px-5 py-3.5 sm:py-4 bg-slate-50/95 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
+                        <!-- Left: Prev/Next Figure (if multiple figures) -->
+                        <div class="flex items-center gap-1.5 sm:gap-2">
+                            <template x-if="figuresList.length > 1">
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" 
+                                            @click="prevFigure()" 
+                                            class="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer flex items-center gap-1"
+                                            title="Sosok Sebelumnya (Panah Kiri)">
+                                        <i class="fas fa-chevron-left text-[10px]"></i>
+                                        <span class="hidden sm:inline">Sebelumnya</span>
+                                    </button>
+                                    <button type="button" 
+                                            @click="nextFigure()" 
+                                            class="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer flex items-center gap-1"
+                                            title="Sosok Selanjutnya (Panah Kanan)">
+                                        <span class="hidden sm:inline">Selanjutnya</span>
+                                        <i class="fas fa-chevron-right text-[10px]"></i>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Right: Close Button -->
+                        <button type="button" 
+                                @click="figureModalOpen = false" 
+                                class="px-5 py-2.5 rounded-xl bg-[#17385c] hover:bg-[#102742] text-white text-xs font-black uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer">
+                            Tutup
+                        </button>
+                    </div>
+
+                </div>
+            </div>
 
             @if($activeEdition->poster_image)
             <!-- Fullscreen Lightbox Modal -->

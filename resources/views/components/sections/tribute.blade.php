@@ -264,8 +264,25 @@
                             </div>
 
                             @if($fig->quote)
+                                @php
+                                    $homeRawQuote = trim($fig->quote);
+                                    $homeCleanQuote = trim($homeRawQuote, " \t\n\r\0\x0B\"'“”");
+                                    $isHomeLongQuote = mb_strlen($homeCleanQuote) > 130;
+                                @endphp
                                 <div class="text-xs sm:text-sm italic text-amber-100/90 leading-relaxed pl-3 border-l-2 border-amber-400">
-                                    "{{ $fig->quote }}"
+                                    @if($isHomeLongQuote)
+                                        <p class="line-clamp-3">“{{ $homeCleanQuote }}”</p>
+                                        <div class="pt-1.5">
+                                            <a href="{{ route('jejak-bakti', ['periode' => $tribute ? $tribute->period : '']) }}" 
+                                               class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 hover:text-amber-200 transition-colors">
+                                                <i class="fas fa-book-reader text-amber-400 text-xs"></i>
+                                                <span>Lihat Detail Cerita</span>
+                                                <i class="fas fa-arrow-right text-[10px]"></i>
+                                            </a>
+                                        </div>
+                                    @else
+                                        <p>“{{ $homeCleanQuote }}”</p>
+                                    @endif
                                 </div>
                             @endif
 

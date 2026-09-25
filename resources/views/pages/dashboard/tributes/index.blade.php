@@ -460,8 +460,11 @@
                                     </div>
 
                                     @if($figure->quote)
-                                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100 text-slate-600 text-xs italic leading-relaxed">
-                                            "{{ $figure->quote }}"
+                                        @php
+                                            $adminCleanQuote = trim($figure->quote, " \t\n\r\0\x0B\"'“”");
+                                        @endphp
+                                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100 text-slate-600 text-xs italic leading-relaxed line-clamp-3" title="“{{ $adminCleanQuote }}”">
+                                            “{{ $adminCleanQuote }}”
                                         </div>
                                     @endif
 
