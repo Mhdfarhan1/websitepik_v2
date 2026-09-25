@@ -21,23 +21,69 @@
              storyModalOpen: {{ request('baca') === 'kisah' ? 'true' : 'false' }},
              figureModalOpen: false,
              selectedFigureIndex: 0,
+             activeModalTab: 'quote',
              figuresList: @js($figuresDataJson),
              get selectedFigure() {
                  return this.figuresList[this.selectedFigureIndex] || null;
              },
              openFigureDetail(idx) {
                  this.selectedFigureIndex = idx;
+                 const fig = this.figuresList[idx];
+                 if (fig && !fig.quote && fig.contribution) {
+                     this.activeModalTab = 'contribution';
+                 } else {
+                     this.activeModalTab = 'quote';
+                 }
                  this.figureModalOpen = true;
              },
              nextFigure() {
                  if (this.figuresList.length > 0) {
                      this.selectedFigureIndex = (this.selectedFigureIndex + 1) % this.figuresList.length;
+                     const fig = this.figuresList[this.selectedFigureIndex];
+                     if (fig && !fig.quote && fig.contribution) {
+                         this.activeModalTab = 'contribution';
+                     } else if (fig && fig.quote && !fig.contribution) {
+                         this.activeModalTab = 'quote';
+                     }
                  }
              },
              prevFigure() {
                  if (this.figuresList.length > 0) {
                      this.selectedFigureIndex = (this.selectedFigureIndex - 1 + this.figuresList.length) % this.figuresList.length;
+                     const fig = this.figuresList[this.selectedFigureIndex];
+                     if (fig && !fig.quote && fig.contribution) {
+                         this.activeModalTab = 'contribution';
+                     } else if (fig && fig.quote && !fig.contribution) {
+                         this.activeModalTab = 'quote';
+                     }
                  }
+             },
+             formatParagraphs(text) {
+                 if (!text) return [];
+                 let clean = text.trim().replace(/^["\s]+|["\s]+$/g, '');
+                 if (clean.includes('\n')) {
+                     let lines = clean.split(/\n+/).map(p => p.trim()).filter(p => p.length > 0);
+                     if (lines.length > 1) {
+                         return lines;
+                     }
+                 }
+                 let sentences = clean.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g);
+                 if (!sentences || sentences.length <= 2) {
+                     return [clean];
+                 }
+                 let paragraphs = [];
+                 let current = '';
+                 for (let i = 0; i < sentences.length; i++) {
+                     current += (current ? ' ' : '') + sentences[i].trim();
+                     if ((i % 2 === 1 || current.length > 200) && i < sentences.length - 1) {
+                         paragraphs.push(current);
+                         current = '';
+                     }
+                 }
+                 if (current) {
+                     paragraphs.push(current);
+                 }
+                 return paragraphs;
              },
              appreciationCount: {{ (int)($activeEdition ? $activeEdition->appreciation_count : 0) }},
              hasAppreciated: false,
@@ -550,20 +596,19 @@
             </div>
 
             @if($activeEdition && $activeEdition->story_content)
-            <!-- Fullscreen Story / Narrative Reader Modal -->
             <div x-show="storyModalOpen" 
                  x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
                  x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
                  @keydown.escape.window="storyModalOpen = false"
-                 class="fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden"
+                 class="fixed inset-0 z-[120] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3.5 sm:p-5 md:p-6 overflow-hidden"
                  style="display: none;">
                 
                 <div @click.away="storyModalOpen = false" 
-                     class="relative w-full max-w-3xl bg-white rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl border border-slate-200/80 flex flex-col h-[90vh] sm:h-auto sm:max-h-[88vh] overflow-hidden">
+                     class="relative w-full max-w-3xl bg-white rounded-3xl sm:rounded-[2rem] shadow-2xl border border-slate-200/80 flex flex-col max-h-[84vh] sm:max-h-[88vh] overflow-hidden my-auto">
                     
                     <!-- Modal Header -->
                     <div class="px-4 sm:px-8 py-3.5 sm:py-4 border-b border-slate-100 bg-slate-50/95 backdrop-blur-sm flex items-center justify-between gap-3 shrink-0">
@@ -683,49 +728,51 @@
             <!-- Interactive Figure Story & Profile Detail Modal -->
             <div x-show="figureModalOpen" 
                  x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
                  x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
                  @keydown.escape.window="figureModalOpen = false"
                  @keydown.arrow-left.window="if(figureModalOpen) prevFigure()"
                  @keydown.arrow-right.window="if(figureModalOpen) nextFigure()"
-                 class="fixed inset-0 z-[125] bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 md:p-6 overflow-hidden"
+                 class="fixed inset-0 z-[125] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3.5 sm:p-5 md:p-6 overflow-hidden"
                  style="display: none;">
                 
                 <div @click.away="figureModalOpen = false" 
-                     class="relative w-full max-w-2xl bg-white rounded-t-[2.5rem] sm:rounded-[2rem] shadow-2xl border border-slate-200/80 flex flex-col max-h-[92vh] sm:max-h-[88vh] overflow-hidden">
+                     class="relative w-full max-w-xl bg-white rounded-[2rem] sm:rounded-[2.25rem] shadow-2xl border border-slate-200/80 flex flex-col max-h-[82vh] sm:max-h-[86vh] overflow-hidden my-auto">
                     
                     <!-- Modal Header with Prestige Gradient -->
-                    <div class="relative overflow-hidden bg-gradient-to-r from-slate-900 via-[#17385c] to-blue-900 text-white p-5 sm:p-7 shrink-0 border-b border-white/10">
+                    <div class="relative overflow-hidden bg-gradient-to-r from-slate-900 via-[#17385c] to-blue-950 text-white pt-5 pb-4 px-5 sm:px-6 shrink-0 border-b border-white/10">
                         <!-- Decorative background glow -->
-                        <div class="absolute -top-16 -right-16 w-44 h-44 bg-amber-400/15 rounded-full blur-3xl pointer-events-none"></div>
-                        <div class="absolute -bottom-16 -left-16 w-44 h-44 bg-blue-400/15 rounded-full blur-3xl pointer-events-none"></div>
+                        <div class="absolute -top-12 -right-12 w-40 h-40 bg-amber-400/15 rounded-full blur-3xl pointer-events-none"></div>
+                        <div class="absolute -bottom-12 -left-12 w-40 h-40 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
-                        <!-- Top row: Badges & Close Button -->
-                        <div class="relative z-10 flex items-center justify-between gap-3 mb-4">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30"
-                                      x-text="selectedFigure?.honor_title">
+                        <!-- Top row: Badges & Close Button with Safe Spacing -->
+                        <div class="relative z-10 flex items-center justify-between gap-2.5 mb-3.5">
+                            <div class="flex items-center gap-1.5 flex-wrap min-w-0">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-400/20 text-amber-300 border border-amber-400/30 truncate shadow-2xs">
+                                    <i class="fas fa-crown text-[9px] text-amber-400 shrink-0"></i>
+                                    <span class="truncate" x-text="selectedFigure?.honor_title"></span>
                                 </span>
                                 <template x-if="selectedFigure?.period">
-                                    <span class="px-2.5 py-0.5 rounded-full bg-white/10 text-slate-300 text-[11px] font-bold"
+                                    <span class="px-2.5 py-1 rounded-full bg-white/10 text-slate-300 text-[10px] font-bold tracking-wide shrink-0"
                                           x-text="'Tahun ' + selectedFigure.period">
                                     </span>
                                 </template>
                             </div>
 
                             <button @click="figureModalOpen = false" 
-                                    class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 text-white/90 hover:text-white flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-95 shadow-sm"
+                                    type="button"
+                                    class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 active:scale-90 text-white flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-sm"
                                     title="Tutup (Esc)">
-                                <i class="fas fa-times text-xs sm:text-sm"></i>
+                                <i class="fas fa-times text-xs"></i>
                             </button>
                         </div>
 
                         <!-- Figure Profile Header Info -->
-                        <div class="relative z-10 flex items-center gap-4 sm:gap-5">
-                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/15 bg-gradient-to-tr from-[#17385c] to-blue-600 flex items-center justify-center font-black text-white text-xl sm:text-2xl shrink-0">
+                        <div class="relative z-10 flex items-center gap-3.5 sm:gap-4">
+                            <div class="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shadow-xl ring-2 ring-amber-400/40 bg-gradient-to-tr from-[#17385c] to-blue-600 flex items-center justify-center font-black text-white text-lg sm:text-xl shrink-0">
                                 <template x-if="selectedFigure?.photo">
                                     <img :src="selectedFigure.photo" :alt="selectedFigure.name" class="w-full h-full object-cover">
                                 </template>
@@ -734,14 +781,14 @@
                                 </template>
                             </div>
                             <div class="min-w-0 flex-1">
-                                <h3 class="text-lg sm:text-2xl font-black text-white leading-tight truncate" x-text="selectedFigure?.name"></h3>
-                                <p class="text-xs sm:text-sm text-amber-300 font-semibold mt-0.5 truncate" x-text="selectedFigure?.honor_title"></p>
+                                <h3 class="text-base sm:text-xl font-black text-white leading-tight truncate" x-text="selectedFigure?.name"></h3>
+                                <p class="text-[11px] sm:text-xs text-amber-300 font-semibold mt-0.5 truncate" x-text="selectedFigure?.honor_title"></p>
                                 
                                 <template x-if="selectedFigure?.instagram">
-                                    <div class="mt-2">
+                                    <div class="mt-1.5">
                                         <a :href="'https://instagram.com/' + selectedFigure.instagram" target="_blank" 
-                                           class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border border-pink-400/30 text-[11px] font-bold transition-all shadow-2xs">
-                                            <i class="fab fa-instagram"></i>
+                                           class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border border-pink-400/30 text-[10px] font-bold transition-all shadow-2xs">
+                                            <i class="fab fa-instagram text-[10px]"></i>
                                             <span x-text="'@' + selectedFigure.instagram"></span>
                                         </a>
                                     </div>
@@ -750,72 +797,121 @@
                         </div>
                     </div>
 
-                    <!-- Modal Scrollable Reader Content -->
-                    <div class="p-5 sm:p-7 md:p-8 overflow-y-auto space-y-5 text-slate-700 font-normal leading-relaxed text-sm sm:text-base overscroll-contain">
+                    <!-- Modal Scrollable Reader Content with Pristine Spaced Typography -->
+                    <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-slate-700 overscroll-contain pb-8">
                         
-                        <!-- Section Indicator -->
-                        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                            <div class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#17385c]">
-                                <i class="fas fa-feather-alt text-amber-500"></i>
-                                <span>Kisah & Pesan Inspiratif</span>
+                        <!-- Top Tabs Switcher (Only if figure has BOTH quote and contribution) -->
+                        <template x-if="selectedFigure?.quote && selectedFigure?.contribution">
+                            <div class="p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 flex items-center gap-1 shadow-2xs">
+                                <button type="button" 
+                                        @click="activeModalTab = 'quote'"
+                                        :class="activeModalTab === 'quote' ? 'bg-white text-[#17385c] font-black shadow-xs' : 'text-slate-500 hover:text-slate-800 font-bold'"
+                                        class="flex-1 py-2 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fas fa-feather-alt text-amber-500 text-xs"></i>
+                                    <span>Pesan & Kisah</span>
+                                </button>
+                                <button type="button" 
+                                        @click="activeModalTab = 'contribution'"
+                                        :class="activeModalTab === 'contribution' ? 'bg-white text-[#17385c] font-black shadow-xs' : 'text-slate-500 hover:text-slate-800 font-bold'"
+                                        class="flex-1 py-2 px-3 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <i class="fas fa-medal text-amber-500 text-xs"></i>
+                                    <span>Jasa & Kontribusi</span>
+                                </button>
                             </div>
-                            <template x-if="figuresList.length > 1">
-                                <span class="text-[11px] font-bold text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full" 
-                                      x-text="(selectedFigureIndex + 1) + ' dari ' + figuresList.length + ' Duta'">
-                                </span>
-                            </template>
-                        </div>
+                        </template>
 
-                        <!-- Story Quote Card -->
-                        <template x-if="selectedFigure?.quote">
-                            <div class="relative bg-gradient-to-b from-amber-50/40 via-white to-slate-50/70 p-5 sm:p-7 rounded-2xl border border-amber-200/60 shadow-inner">
-                                <i class="fas fa-quote-right text-amber-400/15 text-5xl sm:text-6xl absolute top-4 right-5 pointer-events-none select-none"></i>
-                                <div class="relative z-10 text-slate-700 text-sm sm:text-[15.5px] leading-relaxed sm:leading-loose whitespace-pre-line font-medium italic"
-                                     x-text="'“' + selectedFigure.quote + '”'">
+                        <!-- Kisah & Refleksi Section (Shown if activeTab === 'quote' or if no contribution) -->
+                        <template x-if="selectedFigure?.quote && (activeModalTab === 'quote' || !selectedFigure?.contribution)">
+                            <div class="bg-slate-50/90 rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-2xs space-y-3.5">
+                                <div class="flex items-center justify-between pb-3 border-b border-slate-200/70">
+                                    <div class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#17385c]">
+                                        <span class="w-6 h-6 rounded-lg bg-blue-100 text-[#17385c] flex items-center justify-center text-xs">
+                                            <i class="fas fa-feather-alt text-amber-500"></i>
+                                        </span>
+                                        <span>Kisah & Pesan Inspiratif</span>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-slate-500 bg-white border border-slate-200/80 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                        Refleksi
+                                    </span>
+                                </div>
+
+                                <div class="text-amber-500/60 text-lg font-serif leading-none pt-1">
+                                    <i class="fas fa-quote-left"></i>
+                                </div>
+
+                                <!-- Airy Paragraphs with high readability -->
+                                <div class="space-y-4 text-slate-700 text-[14px] sm:text-[15px] font-normal leading-[1.85] sm:leading-[1.95] tracking-[0.015em]">
+                                    <template x-for="(para, pIdx) in formatParagraphs(selectedFigure?.quote)" :key="pIdx">
+                                        <p class="text-slate-700" x-text="para"></p>
+                                    </template>
+                                </div>
+
+                                <div class="text-right text-amber-500/40 text-base font-serif leading-none pt-1">
+                                    <i class="fas fa-quote-right"></i>
                                 </div>
                             </div>
                         </template>
 
-                        <!-- Jasa & Kontribusi Block -->
-                        <template x-if="selectedFigure?.contribution">
-                            <div class="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                                <div class="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                                    <i class="fas fa-award text-amber-500 text-xs"></i>
-                                    <span>Jasa, Advokasi & Kontribusi:</span>
+                        <!-- Jasa & Kontribusi Section (Shown if activeTab === 'contribution' or if no quote) -->
+                        <template x-if="selectedFigure?.contribution && (activeModalTab === 'contribution' || !selectedFigure?.quote)">
+                            <div class="bg-gradient-to-b from-amber-50/50 via-white to-slate-50/60 rounded-2xl p-5 sm:p-6 border border-amber-200/80 shadow-2xs space-y-4">
+                                <div class="flex items-center justify-between pb-3 border-b border-amber-200/60">
+                                    <div class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-amber-900">
+                                        <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-600 flex items-center justify-center text-xs">
+                                            <i class="fas fa-medal"></i>
+                                        </span>
+                                        <span>Jasa, Advokasi & Kontribusi</span>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-amber-800/80 bg-amber-100/80 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                        Rekam Jejak
+                                    </span>
                                 </div>
-                                <p class="text-xs sm:text-sm text-slate-700 leading-relaxed font-semibold" x-text="selectedFigure.contribution"></p>
+
+                                <!-- Airy Paragraphs with high readability -->
+                                <div class="space-y-4 text-slate-700 text-[14px] sm:text-[15px] font-normal leading-[1.85] sm:leading-[1.95] tracking-[0.015em]">
+                                    <template x-for="(para, pIdx) in formatParagraphs(selectedFigure?.contribution)" :key="pIdx">
+                                        <p class="text-slate-700" x-text="para"></p>
+                                    </template>
+                                </div>
                             </div>
                         </template>
+
                     </div>
 
                     <!-- Modal Footer Navigation & Actions -->
-                    <div class="px-5 py-3.5 sm:py-4 bg-slate-50/95 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
-                        <!-- Left: Prev/Next Figure (if multiple figures) -->
-                        <div class="flex items-center gap-1.5 sm:gap-2">
+                    <div class="px-4 sm:px-6 py-3.5 bg-slate-50/95 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
+                        <!-- Left: Navigation (if multiple figures) -->
+                        <div class="flex items-center gap-1.5 min-w-0">
                             <template x-if="figuresList.length > 1">
                                 <div class="flex items-center gap-1.5">
                                     <button type="button" 
                                             @click="prevFigure()" 
-                                            class="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer flex items-center gap-1"
+                                            class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer flex items-center gap-1"
                                             title="Sosok Sebelumnya (Panah Kiri)">
-                                        <i class="fas fa-chevron-left text-[10px]"></i>
-                                        <span class="hidden sm:inline">Sebelumnya</span>
+                                        <i class="fas fa-chevron-left text-[9px]"></i>
+                                        <span class="text-[11px]">Sebelumnya</span>
                                     </button>
                                     <button type="button" 
                                             @click="nextFigure()" 
-                                            class="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer flex items-center gap-1"
+                                            class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer flex items-center gap-1"
                                             title="Sosok Selanjutnya (Panah Kanan)">
-                                        <span class="hidden sm:inline">Selanjutnya</span>
-                                        <i class="fas fa-chevron-right text-[10px]"></i>
+                                        <span class="text-[11px]">Selanjutnya</span>
+                                        <i class="fas fa-chevron-right text-[9px]"></i>
                                     </button>
                                 </div>
+                            </template>
+                            <template x-if="figuresList.length <= 1">
+                                <span class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5 truncate">
+                                    <i class="fas fa-award text-amber-500 shrink-0"></i>
+                                    <span class="truncate">Duta GenRe SMAN 1 TPP</span>
+                                </span>
                             </template>
                         </div>
 
                         <!-- Right: Close Button -->
                         <button type="button" 
                                 @click="figureModalOpen = false" 
-                                class="px-5 py-2.5 rounded-xl bg-[#17385c] hover:bg-[#102742] text-white text-xs font-black uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer">
+                                class="px-6 py-2.5 rounded-xl bg-[#17385c] hover:bg-[#102742] text-white text-xs font-black uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer shrink-0">
                             Tutup
                         </button>
                     </div>
