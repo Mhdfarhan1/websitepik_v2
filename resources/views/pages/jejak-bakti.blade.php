@@ -15,168 +15,7 @@
         })->toArray() : [];
     @endphp
 
-    <div class="relative min-h-screen pt-20 bg-slate-50"
-         x-data="{
-             lightboxOpen: false,
-             storyModalOpen: {{ request('baca') === 'kisah' ? 'true' : 'false' }},
-             figureModalOpen: false,
-             selectedFigureIndex: 0,
-             activeModalTab: 'quote',
-             figuresList: @js($figuresDataJson),
-             get selectedFigure() {
-                 return this.figuresList[this.selectedFigureIndex] || null;
-             },
-             openFigureDetail(idx) {
-                 this.selectedFigureIndex = idx;
-                 const fig = this.figuresList[idx];
-                 if (fig && !fig.quote && fig.contribution) {
-                     this.activeModalTab = 'contribution';
-                 } else {
-                     this.activeModalTab = 'quote';
-                 }
-                 this.figureModalOpen = true;
-             },
-             nextFigure() {
-                 if (this.figuresList.length > 0) {
-                     this.selectedFigureIndex = (this.selectedFigureIndex + 1) % this.figuresList.length;
-                     const fig = this.figuresList[this.selectedFigureIndex];
-                     if (fig && !fig.quote && fig.contribution) {
-                         this.activeModalTab = 'contribution';
-                     } else if (fig && fig.quote && !fig.contribution) {
-                         this.activeModalTab = 'quote';
-                     }
-                 }
-             },
-             prevFigure() {
-                 if (this.figuresList.length > 0) {
-                     this.selectedFigureIndex = (this.selectedFigureIndex - 1 + this.figuresList.length) % this.figuresList.length;
-                     const fig = this.figuresList[this.selectedFigureIndex];
-                     if (fig && !fig.quote && fig.contribution) {
-                         this.activeModalTab = 'contribution';
-                     } else if (fig && fig.quote && !fig.contribution) {
-                         this.activeModalTab = 'quote';
-                     }
-                 }
-             },
-             formatParagraphs(text) {
-                 if (!text) return [];
-                 let clean = text.trim().replace(/^["\s]+|["\s]+$/g, '');
-                 if (clean.includes('\n')) {
-                     let lines = clean.split(/\n+/).map(p => p.trim()).filter(p => p.length > 0);
-                     if (lines.length > 1) {
-                         return lines;
-                     }
-                 }
-                 let sentences = clean.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g);
-                 if (!sentences || sentences.length <= 2) {
-                     return [clean];
-                 }
-                 let paragraphs = [];
-                 let current = '';
-                 for (let i = 0; i < sentences.length; i++) {
-                     current += (current ? ' ' : '') + sentences[i].trim();
-                     if ((i % 2 === 1 || current.length > 200) && i < sentences.length - 1) {
-                         paragraphs.push(current);
-                         current = '';
-                     }
-                 }
-                 if (current) {
-                     paragraphs.push(current);
-                 }
-                 return paragraphs;
-             },
-             appreciationCount: {{ (int)($activeEdition ? $activeEdition->appreciation_count : 0) }},
-             hasAppreciated: false,
-             audioPlaying: false,
-             audioMuted: false,
-             playerMinimized: false,
-             init() {
-                 this.$nextTick(() => {
-                     this.initAutoplay();
-                 });
-             },
-             initAutoplay() {
-                 const audio = document.getElementById('tribute-audio-player');
-                 if (!audio) return;
-                 audio.volume = 0.75;
-                 
-                 // Try direct autoplay immediately (works if browser allows or user clicked link)
-                 const playPromise = audio.play();
-                 if (playPromise !== undefined) {
-                     playPromise.then(() => {
-                         this.audioPlaying = true;
-                     }).catch(() => {
-                         // Autoplay was blocked by browser policy without user gesture.
-                         // Instagram / TikTok technique: immediately start on first interaction (click, scroll, touch, key)
-                         const startOnInteraction = () => {
-                             audio.play().then(() => {
-                                 this.audioPlaying = true;
-                             }).catch(() => {});
-                             window.removeEventListener('click', startOnInteraction);
-                             window.removeEventListener('touchstart', startOnInteraction);
-                             window.removeEventListener('scroll', startOnInteraction);
-                             window.removeEventListener('keydown', startOnInteraction);
-                         };
-
-                         window.addEventListener('click', startOnInteraction, { once: true });
-                         window.addEventListener('touchstart', startOnInteraction, { once: true });
-                         window.addEventListener('scroll', startOnInteraction, { once: true });
-                         window.addEventListener('keydown', startOnInteraction, { once: true });
-                     });
-                 }
-             },
-             toggleAudio() {
-                 const audio = document.getElementById('tribute-audio-player');
-                 if (!audio) return;
-                 if (this.audioPlaying) {
-                     audio.pause();
-                     this.audioPlaying = false;
-                 } else {
-                     audio.play().then(() => {
-                         this.audioPlaying = true;
-                     }).catch(e => {
-                         console.log('Audio error:', e);
-                     });
-                 }
-             },
-             toggleMute() {
-                 const audio = document.getElementById('tribute-audio-player');
-                 if (!audio) return;
-                 audio.muted = !audio.muted;
-                 this.audioMuted = audio.muted;
-             },
-             appreciate() {
-                 if (this.hasAppreciated) return;
-                 this.hasAppreciated = true;
-                 this.appreciationCount++;
-                 
-                 fetch('{{ route('tributes.appreciate') }}', {
-                     method: 'POST',
-                     headers: {
-                         'Content-Type': 'application/json',
-                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                     },
-                     body: JSON.stringify({
-                         edition_id: {{ $activeEdition ? $activeEdition->id : 'null' }}
-                     })
-                 }).then(res => res.json()).then(data => {
-                     if(data.count) this.appreciationCount = data.count;
-                 }).catch(err => console.log(err));
-
-                 if (window.Swal) {
-                     Swal.fire({
-                         icon: 'success',
-                         title: 'Terima Kasih Banyak!',
-                         text: 'Dukungan & rasa bangga kamu untuk para Duta GenRe telah terkirim!',
-                         timer: 2300,
-                         showConfirmButton: false,
-                         customClass: {
-                             popup: 'rounded-2xl shadow-xl'
-                         }
-                     });
-                 }
-             }
-         }">
+    <div class="relative min-h-screen pt-20 bg-slate-50" x-data="jejakBaktiApp()">
         
         <!-- Header Banner -->
         <div class="relative overflow-hidden border-b border-slate-200">
@@ -963,4 +802,168 @@
         @endif
 
     </div>
+
+    <!-- Script Component Definition for Alpine.js -->
+    <script>
+        function jejakBaktiApp() {
+            return {
+                lightboxOpen: false,
+                storyModalOpen: {{ request('baca') === 'kisah' ? 'true' : 'false' }},
+                figureModalOpen: false,
+                selectedFigureIndex: 0,
+                activeModalTab: 'quote',
+                figuresList: @js($figuresDataJson),
+                get selectedFigure() {
+                    return this.figuresList[this.selectedFigureIndex] || null;
+                },
+                openFigureDetail(idx) {
+                    this.selectedFigureIndex = idx;
+                    const fig = this.figuresList[idx];
+                    if (fig && !fig.quote && fig.contribution) {
+                        this.activeModalTab = 'contribution';
+                    } else {
+                        this.activeModalTab = 'quote';
+                    }
+                    this.figureModalOpen = true;
+                },
+                nextFigure() {
+                    if (this.figuresList.length > 0) {
+                        this.selectedFigureIndex = (this.selectedFigureIndex + 1) % this.figuresList.length;
+                        const fig = this.figuresList[this.selectedFigureIndex];
+                        if (fig && !fig.quote && fig.contribution) {
+                            this.activeModalTab = 'contribution';
+                        } else if (fig && fig.quote && !fig.contribution) {
+                            this.activeModalTab = 'quote';
+                        }
+                    }
+                },
+                prevFigure() {
+                    if (this.figuresList.length > 0) {
+                        this.selectedFigureIndex = (this.selectedFigureIndex - 1 + this.figuresList.length) % this.figuresList.length;
+                        const fig = this.figuresList[this.selectedFigureIndex];
+                        if (fig && !fig.quote && fig.contribution) {
+                            this.activeModalTab = 'contribution';
+                        } else if (fig && fig.quote && !fig.contribution) {
+                            this.activeModalTab = 'quote';
+                        }
+                    }
+                },
+                formatParagraphs(text) {
+                    if (!text) return [];
+                    let clean = text.trim().replace(/^["\s]+|["\s]+$/g, '');
+                    if (clean.includes('\n')) {
+                        let lines = clean.split(/\n+/).map(p => p.trim()).filter(p => p.length > 0);
+                        if (lines.length > 1) {
+                            return lines;
+                        }
+                    }
+                    let sentences = clean.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g);
+                    if (!sentences || sentences.length <= 2) {
+                        return [clean];
+                    }
+                    let paragraphs = [];
+                    let current = '';
+                    for (let i = 0; i < sentences.length; i++) {
+                        current += (current ? ' ' : '') + sentences[i].trim();
+                        if ((i % 2 === 1 || current.length > 200) && i < sentences.length - 1) {
+                            paragraphs.push(current);
+                            current = '';
+                        }
+                    }
+                    if (current) {
+                        paragraphs.push(current);
+                    }
+                    return paragraphs;
+                },
+                appreciationCount: {{ (int)($activeEdition ? $activeEdition->appreciation_count : 0) }},
+                hasAppreciated: false,
+                audioPlaying: false,
+                audioMuted: false,
+                playerMinimized: false,
+                init() {
+                    this.$nextTick(() => {
+                        this.initAutoplay();
+                    });
+                },
+                initAutoplay() {
+                    const audio = document.getElementById('tribute-audio-player');
+                    if (!audio) return;
+                    audio.volume = 0.75;
+                    
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            this.audioPlaying = true;
+                        }).catch(() => {
+                            const startOnInteraction = () => {
+                                audio.play().then(() => {
+                                    this.audioPlaying = true;
+                                }).catch(() => {});
+                                window.removeEventListener('click', startOnInteraction);
+                                window.removeEventListener('touchstart', startOnInteraction);
+                                window.removeEventListener('scroll', startOnInteraction);
+                                window.removeEventListener('keydown', startOnInteraction);
+                            };
+
+                            window.addEventListener('click', startOnInteraction, { once: true });
+                            window.addEventListener('touchstart', startOnInteraction, { once: true });
+                            window.addEventListener('scroll', startOnInteraction, { once: true });
+                            window.addEventListener('keydown', startOnInteraction, { once: true });
+                        });
+                    }
+                },
+                toggleAudio() {
+                    const audio = document.getElementById('tribute-audio-player');
+                    if (!audio) return;
+                    if (this.audioPlaying) {
+                        audio.pause();
+                        this.audioPlaying = false;
+                    } else {
+                        audio.play().then(() => {
+                            this.audioPlaying = true;
+                        }).catch(e => {
+                            console.log('Audio error:', e);
+                        });
+                    }
+                },
+                toggleMute() {
+                    const audio = document.getElementById('tribute-audio-player');
+                    if (!audio) return;
+                    audio.muted = !audio.muted;
+                    this.audioMuted = audio.muted;
+                },
+                appreciate() {
+                    if (this.hasAppreciated) return;
+                    this.hasAppreciated = true;
+                    this.appreciationCount++;
+                    
+                    fetch('{{ route('tributes.appreciate') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            edition_id: {{ $activeEdition ? $activeEdition->id : 'null' }}
+                        })
+                    }).then(res => res.json()).then(data => {
+                        if(data.count) this.appreciationCount = data.count;
+                    }).catch(err => console.log(err));
+
+                    if (window.Swal) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Terima Kasih Banyak!',
+                            text: 'Dukungan & rasa bangga kamu untuk para Duta GenRe telah terkirim!',
+                            timer: 2300,
+                            showConfirmButton: false,
+                            customClass: {
+                                popup: 'rounded-2xl shadow-xl'
+                            }
+                        });
+                    }
+                }
+            };
+        }
+    </script>
 </x-layouts.app>
