@@ -611,7 +611,7 @@
 
                         <!-- Figure Profile Header Info -->
                         <div class="relative z-10 flex items-center gap-3.5 sm:gap-4">
-                            <div class="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shadow-xl ring-2 ring-amber-400/40 bg-gradient-to-tr from-[#17385c] to-blue-600 flex items-center justify-center font-black text-white text-lg sm:text-xl shrink-0">
+                            <div class="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-2xl overflow-hidden shadow-xl ring-2 ring-amber-400/40 bg-gradient-to-tr from-[#17385c] to-blue-600 flex items-center justify-center font-black text-white text-lg sm:text-xl">
                                 <template x-if="selectedFigure?.photo">
                                     <img :src="selectedFigure.photo" :alt="selectedFigure.name" class="w-full h-full object-cover">
                                 </template>
