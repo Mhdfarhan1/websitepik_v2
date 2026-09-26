@@ -155,6 +155,10 @@
                 Jejak Bakti & Duta
             </x-dashboard.sidebar-item>
 
+            <x-dashboard.sidebar-item href="{{ route('dashboard.leaders.index') }}" icon="fas fa-crown" :active="request()->routeIs('dashboard.leaders.*')">
+                Jejak Ketua
+            </x-dashboard.sidebar-item>
+
             @if($canSee('profil_lengkap'))
                 <x-dashboard.sidebar-item href="{{ route('dashboard.complete-profile.index') }}" icon="fas fa-address-card" :active="request()->routeIs('dashboard.complete-profile.*')">
                     Profil Lengkap

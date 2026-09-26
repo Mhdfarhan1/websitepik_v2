@@ -67,6 +67,12 @@
                     <li><a href="{{ route('visi-misi') }}"
                             class="hover:text-white hover:pl-1.5 transition-all duration-200 flex items-center gap-2"><i
                                 class="fas fa-chevron-right text-[9px] text-[#f59e0b]"></i> Visi & Misi</a></li>
+                    <li><a href="{{ route('jejak-ketua') }}"
+                            class="hover:text-white hover:pl-1.5 transition-all duration-200 flex items-center gap-2"><i
+                                class="fas fa-chevron-right text-[9px] text-[#f59e0b]"></i> Jejak Nakhoda (Ketua)</a></li>
+                    <li><a href="{{ route('jejak-bakti') }}"
+                            class="hover:text-white hover:pl-1.5 transition-all duration-200 flex items-center gap-2"><i
+                                class="fas fa-chevron-right text-[9px] text-[#f59e0b]"></i> Jejak Bakti & Duta</a></li>
                     <li><a href="{{ route('proker') }}"
                             class="hover:text-white hover:pl-1.5 transition-all duration-200 flex items-center gap-2"><i
                                 class="fas fa-chevron-right text-[9px] text-[#f59e0b]"></i> Program Kerja</a></li>

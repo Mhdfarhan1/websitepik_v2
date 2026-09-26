@@ -49,13 +49,17 @@
                     <a href="{{ url('/#beranda') }}" class="text-[13px] font-bold {{ request()->is('/') ? 'text-brand' : 'text-slate-800' }} hover:text-brand transition-all uppercase tracking-wide">BERANDA</a>
                     
                     <div class="relative dropdown">
-                        <button class="text-[13px] font-bold {{ request()->routeIs('visi-misi', 'struktur', 'sejarah', 'profil-lengkap') ? 'text-brand' : 'text-slate-800' }} hover:text-brand flex items-center gap-1 transition-all uppercase tracking-wide">
+                        <button class="text-[13px] font-bold {{ request()->routeIs('visi-misi', 'struktur', 'sejarah', 'profil-lengkap', 'jejak-ketua', 'jejak-bakti') ? 'text-brand' : 'text-slate-800' }} hover:text-brand flex items-center gap-1 transition-all uppercase tracking-wide">
                             TENTANG PIK-R <i class="fas fa-chevron-down text-[10px] text-slate-400"></i>
                         </button>
                         <div class="dropdown-menu">
                             <a href="{{ route('visi-misi') }}" class="{{ request()->routeIs('visi-misi') ? 'text-brand' : '' }}">Visi & Misi</a>
                             <a href="{{ route('struktur') }}" class="{{ request()->routeIs('struktur') ? 'text-brand' : '' }}">Struktur Organisasi</a>
                             <a href="{{ route('sejarah') }}" class="{{ request()->routeIs('sejarah') ? 'text-brand' : '' }}">Sejarah</a>
+                            <a href="{{ route('jejak-ketua') }}" class="{{ request()->routeIs('jejak-ketua') ? 'text-brand' : '' }} flex items-center justify-between">
+                                <span>Jejak Nakhoda</span>
+                                <span class="px-1.5 py-0.5 rounded text-[9px] bg-blue-100 text-blue-800 font-black uppercase tracking-wider">Ketua</span>
+                            </a>
                             <a href="{{ route('profil-lengkap') }}" class="{{ request()->routeIs('profil-lengkap') ? 'text-brand' : '' }}">Profil Lengkap</a>
                             <a href="{{ route('jejak-bakti') }}" class="{{ request()->routeIs('jejak-bakti') ? 'text-brand' : '' }} flex items-center justify-between">
                                 <span>Jejak Bakti & Duta</span>
@@ -129,15 +133,19 @@
                 <!-- Tentang PIK-R Dropdown -->
                 <div class="border-t border-white/5 flex flex-col">
                     <div class="flex items-center w-full group cursor-pointer">
-                        <a href="#" class="px-5 py-4 block text-[15px] font-medium {{ request()->routeIs('visi-misi', 'struktur', 'sejarah', 'profil-lengkap') ? 'text-white' : 'text-white/90' }} group-hover:text-white group-hover:pl-7 transition-all duration-300 flex-grow">Tentang PIK-R</a>
+                        <a href="#" class="px-5 py-4 block text-[15px] font-medium {{ request()->routeIs('visi-misi', 'struktur', 'sejarah', 'profil-lengkap', 'jejak-ketua', 'jejak-bakti') ? 'text-white' : 'text-white/90' }} group-hover:text-white group-hover:pl-7 transition-all duration-300 flex-grow">Tentang PIK-R</a>
                         <button class="mobile-sidebar-dropdown-btn p-4 border-l border-white/5 group-hover:bg-white/5 transition-all duration-300 w-14 flex justify-center items-center focus:outline-none shrink-0 text-white/60 group-hover:text-white">
-                            <i class="fas fa-chevron-down text-xs transition-transform duration-300 {{ request()->routeIs('visi-misi', 'struktur', 'sejarah', 'profil-lengkap') ? 'rotate-180' : '' }}"></i>
+                            <i class="fas fa-chevron-down text-xs transition-transform duration-300 {{ request()->routeIs('visi-misi', 'struktur', 'sejarah', 'profil-lengkap', 'jejak-ketua', 'jejak-bakti') ? 'rotate-180' : '' }}"></i>
                         </button>
                     </div>
-                    <div class="mobile-sidebar-dropdown-content {{ request()->routeIs('visi-misi', 'struktur', 'sejarah', 'profil-lengkap') ? 'max-h-[500px]' : 'max-h-0' }} overflow-hidden transition-all duration-500 ease-in-out flex flex-col bg-[#141e2e]">
+                    <div class="mobile-sidebar-dropdown-content {{ request()->routeIs('visi-misi', 'struktur', 'sejarah', 'profil-lengkap', 'jejak-ketua', 'jejak-bakti') ? 'max-h-[500px]' : 'max-h-0' }} overflow-hidden transition-all duration-500 ease-in-out flex flex-col bg-[#141e2e]">
                         <a href="{{ route('visi-misi') }}" class="px-8 py-3.5 block text-[14px] {{ request()->routeIs('visi-misi') ? 'text-brand font-bold' : 'text-white/70' }} hover:text-white hover:pl-10 transition-all duration-300 border-t border-white/5">Visi & Misi</a>
                         <a href="{{ route('struktur') }}" class="px-8 py-3.5 block text-[14px] {{ request()->routeIs('struktur') ? 'text-brand font-bold' : 'text-white/70' }} hover:text-white hover:pl-10 transition-all duration-300 border-t border-white/5">Struktur Organisasi</a>
                         <a href="{{ route('sejarah') }}" class="px-8 py-3.5 block text-[14px] {{ request()->routeIs('sejarah') ? 'text-brand font-bold' : 'text-white/70' }} hover:text-white hover:pl-10 transition-all duration-300 border-t border-white/5">Sejarah</a>
+                        <a href="{{ route('jejak-ketua') }}" class="px-8 py-3.5 flex items-center justify-between text-[14px] {{ request()->routeIs('jejak-ketua') ? 'text-brand font-bold' : 'text-white/70' }} hover:text-white hover:pl-10 transition-all duration-300 border-t border-white/5">
+                            <span>Jejak Nakhoda (Ketua)</span>
+                            <span class="px-1.5 py-0.5 rounded text-[9px] bg-blue-500/20 text-blue-300 border border-blue-400/30 font-black uppercase">Ketua</span>
+                        </a>
                         <a href="{{ route('profil-lengkap') }}" class="px-8 py-3.5 block text-[14px] {{ request()->routeIs('profil-lengkap') ? 'text-brand font-bold' : 'text-white/70' }} hover:text-white hover:pl-10 transition-all duration-300 border-t border-white/5">Profil Lengkap</a>
                         <a href="{{ route('jejak-bakti') }}" class="px-8 py-3.5 flex items-center justify-between text-[14px] {{ request()->routeIs('jejak-bakti') ? 'text-brand font-bold' : 'text-white/70' }} hover:text-white hover:pl-10 transition-all duration-300 border-t border-white/5">
                             <span>Jejak Bakti & Duta</span>

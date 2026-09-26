@@ -72,6 +72,12 @@ Route::get('/profil/jejak-bakti', function (\Illuminate\Http\Request $request, \
     return view('pages.jejak-bakti', compact('editions', 'activeEdition'));
 })->name('jejak-bakti');
 
+Route::get('/profil/jejak-ketua', function (\App\Services\LeaderService $leaderService) {
+    $setting = $leaderService->getSetting();
+    $leaders = $leaderService->getAllLeaders(true);
+    return view('pages.jejak-ketua', compact('setting', 'leaders'));
+})->name('jejak-ketua');
+
 Route::post('/api/tributes/appreciate', function (\Illuminate\Http\Request $request, \App\Services\TributeService $tributeService) {
     $editionId = $request->input('edition_id');
     $count = $tributeService->incrementAppreciation($editionId);
@@ -282,6 +288,14 @@ Route::middleware(['auth', 'force_password'])->prefix('dashboard')->name('dashbo
     Route::delete('/tributes/figures/{id}', [\App\Http\Controllers\Dashboard\TributeController::class, 'destroyFigure'])->name('tributes.figures.destroy');
     Route::post('/tributes/memories', [\App\Http\Controllers\Dashboard\TributeController::class, 'storeMemory'])->name('tributes.memories.store');
     Route::delete('/tributes/memories/{id}', [\App\Http\Controllers\Dashboard\TributeController::class, 'destroyMemory'])->name('tributes.memories.destroy');
+
+    // Jejak Nakhoda / History Ketua
+    Route::get('/leaders', [\App\Http\Controllers\Dashboard\LeaderController::class, 'index'])->name('leaders.index');
+    Route::post('/leaders/settings', [\App\Http\Controllers\Dashboard\LeaderController::class, 'updateSettings'])->name('leaders.settings.update');
+    Route::post('/leaders', [\App\Http\Controllers\Dashboard\LeaderController::class, 'store'])->name('leaders.store');
+    Route::put('/leaders/{id}', [\App\Http\Controllers\Dashboard\LeaderController::class, 'update'])->name('leaders.update');
+    Route::delete('/leaders/{id}', [\App\Http\Controllers\Dashboard\LeaderController::class, 'destroy'])->name('leaders.destroy');
+    Route::post('/leaders/reorder', [\App\Http\Controllers\Dashboard\LeaderController::class, 'reorder'])->name('leaders.reorder');
 
     // Pusat Notifikasi & Broadcast Web Push
     Route::get('/notifications', [NotificationAdminController::class, 'index'])->name('notifications.index');
