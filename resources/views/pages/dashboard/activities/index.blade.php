@@ -68,6 +68,11 @@
                     <span class="inline-block mt-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-[#f59e0b] border border-amber-100">
                         {{ $act->category }}
                     </span>
+                    @if(!empty($act->documentation_images) && is_array($act->documentation_images) && count($act->documentation_images) > 0)
+                        <span class="inline-block mt-1.5 ml-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            <i class="fas fa-images mr-1 text-[9px]"></i> {{ count($act->documentation_images) }} Dokumentasi
+                        </span>
+                    @endif
                 </td>
                 <td class="px-6 py-5">
                     <div class="flex items-center gap-1.5 font-bold text-slate-800 text-xs">

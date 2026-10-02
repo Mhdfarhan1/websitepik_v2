@@ -67,6 +67,11 @@
                             <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-[#f59e0b] border border-amber-100">
                                 {{ $act->category }}
                             </span>
+                            @if(!empty($act->documentation_images) && is_array($act->documentation_images) && count($act->documentation_images) > 0)
+                                <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1">
+                                    <i class="fas fa-images text-[9px]"></i> {{ count($act->documentation_images) }} Foto
+                                </span>
+                            @endif
                         </div>
 
                         <a href="{{ route('kegiatan.show', $act->slug) }}">

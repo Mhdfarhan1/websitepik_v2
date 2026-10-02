@@ -159,6 +159,63 @@
                         </div>
                     </div>
 
+                    <!-- Documentation / Supporting Photos Section (2 - 5 Foto) -->
+                    @if(!empty($activity->documentation_images) && is_array($activity->documentation_images) && count($activity->documentation_images) > 0)
+                        <div class="mt-10 pt-8 border-t border-slate-100" x-data="{ activeImg: null }">
+                            <div class="flex items-center justify-between mb-6">
+                                <div>
+                                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                        <span>Dokumentasi & Potret Kegiatan</span>
+                                    </h3>
+                                    <p class="text-xs text-slate-400 font-medium mt-0.5">Potret pelaksanaan dan momen penting selama kegiatan berlangsung</p>
+                                </div>
+                                <span class="px-3.5 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-extrabold border border-emerald-200/80 shadow-sm flex items-center gap-1.5">
+                                    <i class="fas fa-images text-[11px]"></i>
+                                    <span>{{ count($activity->documentation_images) }} Foto Pendukung</span>
+                                </span>
+                            </div>
+
+                            <!-- Photo Grid -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                @foreach($activity->documentation_images as $docIndex => $docImg)
+                                    <div class="group relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer"
+                                         @click="activeImg = '{{ asset('storage/' . $docImg) }}'">
+                                        <img src="{{ asset('storage/' . $docImg) }}" alt="Dokumentasi {{ $activity->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                                            <div class="w-full flex items-center justify-between text-white text-xs font-bold">
+                                                <span class="flex items-center gap-1.5"><i class="fas fa-search-plus text-amber-400"></i> Klik Perbesar</span>
+                                                <span class="text-[10px] bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-md font-semibold">Foto #{{ $docIndex + 1 }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <!-- Lightbox Modal -->
+                            <div x-show="activeImg" 
+                                 x-cloak 
+                                 x-transition:enter="transition ease-out duration-300"
+                                 x-transition:enter-start="opacity-0"
+                                 x-transition:enter-end="opacity-100"
+                                 x-transition:leave="transition ease-in duration-200"
+                                 x-transition:leave-start="opacity-100"
+                                 x-transition:leave-end="opacity-0"
+                                 @keydown.escape.window="activeImg = null"
+                                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm"
+                                 @click.self="activeImg = null">
+                                <div class="relative max-w-4xl w-full bg-white rounded-3xl overflow-hidden shadow-2xl border border-white/20 p-2 sm:p-3 animate-fade-in-up">
+                                    <button @click="activeImg = null" class="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-slate-900/70 hover:bg-slate-900 text-white flex items-center justify-center text-sm transition-all shadow-md">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <div class="max-h-[80vh] overflow-hidden rounded-2xl flex items-center justify-center bg-black/5">
+                                        <img :src="activeImg" class="max-h-[80vh] w-auto max-w-full object-contain rounded-2xl">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     <!-- Bottom CTA Banner for Participation -->
                     <div class="mt-10 p-6 sm:p-8 bg-gradient-to-r from-[#17385c] via-[#1e40af] to-[#2563eb] rounded-3xl text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
                         <div class="space-y-1 text-center sm:text-left">

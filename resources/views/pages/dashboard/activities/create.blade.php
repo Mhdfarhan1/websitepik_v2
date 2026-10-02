@@ -85,18 +85,23 @@
                     <textarea name="description" rows="5" required placeholder="Tuliskan deskripsi lengkap agenda kegiatan..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all">{{ old('description') }}</textarea>
                 </div>
 
-                <!-- Poster Image Upload with Auto Client-Side Compression & Live Preview -->
-                <div class="space-y-2">
-                    <label class="block text-xs font-bold text-slate-700">
-                        Gambar Poster Kegiatan (Opsional)
-                    </label>
+                <!-- 1. Poster Utama (Cover Banner) with Auto Compression & Live Preview -->
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <i class="fas fa-image text-blue-600"></i>
+                            <span>Foto Poster Utama / Sampul Kegiatan</span>
+                            <span class="text-slate-400 font-normal">(Opsional)</span>
+                        </label>
+                        <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">Banner Depan</span>
+                    </div>
                     
                     <div class="relative border-2 border-dashed border-slate-200 hover:border-blue-400 bg-slate-50/70 hover:bg-blue-50/20 rounded-2xl p-4 transition-all">
-                        <input type="file" id="image-input" name="image" accept="image/jpeg,image/png,image/jpg,image/webp" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer cursor-pointer transition-all">
+                        <input type="file" id="image-input" name="image" accept="image/jpeg,image/png,image/jpg,image/webp" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#1e40af] file:text-white hover:file:bg-blue-800 file:cursor-pointer cursor-pointer transition-all">
                         
                         <div class="flex items-center gap-2 mt-2 text-[11px] text-slate-400">
                             <i class="fas fa-magic text-blue-500"></i>
-                            <span>Otomatis dikompres sebelum diunggah agar proses simpan cepat & tidak terblokir limit server hosting.</span>
+                            <span>Otomatis dikompres instan sebelum diunggah agar proses simpan cepat & aman.</span>
                         </div>
 
                         <!-- Live Preview & Compression Info Container -->
@@ -124,6 +129,45 @@
                     </div>
                 </div>
 
+                <!-- 2. Foto Dokumentasi / Foto Pendukung Kegiatan (Bisa 2 - 5 Foto) -->
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <i class="fas fa-images text-emerald-600"></i>
+                            <span>Foto Pendukung / Dokumentasi Momen (Bisa 2 - 5 Foto)</span>
+                            <span class="text-slate-400 font-normal">(Opsional)</span>
+                        </label>
+                        <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">Konten Rincian</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400">Unggah foto suasana acara, interaksi peserta, atau dokumentasi lainnya untuk ditampilkan di halaman detail kegiatan.</p>
+                    
+                    <div class="relative border-2 border-dashed border-slate-200 hover:border-emerald-400 bg-slate-50/70 hover:bg-emerald-50/20 rounded-2xl p-4 transition-all">
+                        <input type="file" id="docs-input" name="documentation_images[]" multiple accept="image/jpeg,image/png,image/jpg,image/webp" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer cursor-pointer transition-all">
+                        
+                        <div class="flex items-center gap-2 mt-2 text-[11px] text-slate-400">
+                            <i class="fas fa-magic text-emerald-500"></i>
+                            <span>Pilih beberapa foto sekaligus. Semua foto otomatis dikompres aman sebelum diunggah.</span>
+                        </div>
+
+                        <!-- Documentation Preview Grid Container -->
+                        <div id="docs-preview-container" class="hidden mt-4 pt-4 border-t border-slate-200/70">
+                            <div class="flex items-center justify-between mb-3">
+                                <span id="docs-count-badge" class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                    <i class="fas fa-check-circle text-emerald-500"></i>
+                                    <span>Foto Pendukung Terpilih</span>
+                                </span>
+                                <button type="button" id="clear-all-docs-btn" class="text-[11px] font-bold text-rose-500 hover:underline">
+                                    Hapus Semua Foto Pendukung
+                                </button>
+                            </div>
+                            
+                            <div id="docs-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                <!-- Dynamic thumbnail cards will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Submit Button -->
                 <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
                     <a href="{{ route('dashboard.activities.index') }}" class="px-6 py-3 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold text-xs transition-all">
@@ -138,10 +182,12 @@
         </div>
     </div>
 
-    <!-- Client-Side Auto Compression Script -->
+    <!-- Client-Side Auto Compression Script (Single Poster & Multi-Doc Photos) -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('activity-form');
+            
+            // Poster elements
             const input = document.getElementById('image-input');
             const previewContainer = document.getElementById('preview-container');
             const previewImg = document.getElementById('preview-img');
@@ -150,11 +196,21 @@
             const previewCompSize = document.getElementById('preview-comp-size');
             const compressionStatus = document.getElementById('compression-status');
             const removeBtn = document.getElementById('remove-image-btn');
+
+            // Documentation elements
+            const docsInput = document.getElementById('docs-input');
+            const docsPreviewContainer = document.getElementById('docs-preview-container');
+            const docsGrid = document.getElementById('docs-grid');
+            const docsCountBadge = document.getElementById('docs-count-badge');
+            const clearAllDocsBtn = document.getElementById('clear-all-docs-btn');
+
+            // Submit elements
             const submitBtn = document.getElementById('submit-btn');
             const submitIcon = document.getElementById('submit-icon');
             const submitText = document.getElementById('submit-text');
 
             let isCompressing = false;
+            let compressedDocsList = []; // stores compressed File objects for documentation
 
             function formatBytes(bytes) {
                 if (!bytes || bytes === 0) return '0 B';
@@ -166,7 +222,6 @@
 
             async function compressImage(file, maxWidth = 1600, quality = 0.82) {
                 return new Promise((resolve) => {
-                    // Non-raster images or already under 300KB
                     if (!file.type.match(/image\/(jpeg|png|webp|jpg)/i) || file.size < 300 * 1024) {
                         resolve(file);
                         return;
@@ -216,6 +271,7 @@
                 });
             }
 
+            // 1. Single Poster Compression Handler
             input.addEventListener('change', async function () {
                 if (!this.files || !this.files[0]) {
                     previewContainer.classList.add('hidden');
@@ -240,7 +296,6 @@
                 try {
                     const compressedFile = await compressImage(originalFile);
                     
-                    // Replace file in input with compressed version using DataTransfer
                     const dt = new DataTransfer();
                     dt.items.add(compressedFile);
                     input.files = dt.files;
@@ -258,7 +313,7 @@
                         compressionStatus.className = 'text-[10px] text-emerald-600 font-bold flex items-center justify-center sm:justify-start gap-1';
                     }
                 } catch (err) {
-                    console.error('Client compression error:', err);
+                    console.error('Poster compression error:', err);
                     previewCompSize.textContent = formatBytes(originalSize);
                     compressionStatus.innerHTML = '<i class="fas fa-info-circle"></i> Menggunakan file asli.';
                 } finally {
@@ -273,6 +328,85 @@
                 previewImg.src = '';
             });
 
+            // 2. Multi-Documentation Photos Compression Handler
+            function updateDocsDataTransfer() {
+                const dt = new DataTransfer();
+                compressedDocsList.forEach(file => dt.items.add(file));
+                docsInput.files = dt.files;
+
+                renderDocsGrid();
+            }
+
+            function renderDocsGrid() {
+                docsGrid.innerHTML = '';
+                if (compressedDocsList.length === 0) {
+                    docsPreviewContainer.classList.add('hidden');
+                    return;
+                }
+
+                docsPreviewContainer.classList.remove('hidden');
+                docsCountBadge.innerHTML = `<i class="fas fa-check-circle text-emerald-500"></i> <span>${compressedDocsList.length} Foto Pendukung Terpilih (Semua Terkompres Aman)</span>`;
+
+                compressedDocsList.forEach((file, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'relative flex items-center gap-3 p-2.5 bg-white rounded-xl border border-slate-200 shadow-sm';
+                    card.innerHTML = `
+                        <div class="w-14 h-14 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                            <img src="${URL.createObjectURL(file)}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-[11px] font-bold text-slate-800 truncate" title="${file.name}">${file.name}</p>
+                            <span class="inline-block mt-0.5 px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                ${formatBytes(file.size)}
+                            </span>
+                        </div>
+                        <button type="button" data-index="${index}" class="remove-doc-single-btn w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-all border border-transparent hover:border-rose-200 shrink-0" title="Hapus foto ini">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
+                    `;
+                    docsGrid.appendChild(card);
+                });
+
+                // Attach remove handlers
+                document.querySelectorAll('.remove-doc-single-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const idx = parseInt(this.getAttribute('data-index'));
+                        compressedDocsList.splice(idx, 1);
+                        updateDocsDataTransfer();
+                    });
+                });
+            }
+
+            docsInput.addEventListener('change', async function () {
+                if (!this.files || this.files.length === 0) return;
+
+                isCompressing = true;
+                submitBtn.disabled = true;
+                docsPreviewContainer.classList.remove('hidden');
+                docsCountBadge.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-500"></i> <span>Mengompres foto-foto pendukung...</span>';
+
+                try {
+                    const selectedFiles = Array.from(this.files);
+                    for (const rawFile of selectedFiles) {
+                        const compressed = await compressImage(rawFile);
+                        compressedDocsList.push(compressed);
+                    }
+                    updateDocsDataTransfer();
+                } catch (err) {
+                    console.error('Documentation photos compression error:', err);
+                } finally {
+                    isCompressing = false;
+                    submitBtn.disabled = false;
+                }
+            });
+
+            clearAllDocsBtn.addEventListener('click', function () {
+                compressedDocsList = [];
+                docsInput.value = '';
+                updateDocsDataTransfer();
+            });
+
+            // Form Submit Protection
             form.addEventListener('submit', function (e) {
                 if (isCompressing) {
                     e.preventDefault();
@@ -280,7 +414,6 @@
                     return;
                 }
 
-                // Show loading state to prevent double submit
                 submitBtn.disabled = true;
                 submitIcon.className = 'fas fa-circle-notch fa-spin';
                 submitText.textContent = 'Menyimpan Agenda Kegiatan...';

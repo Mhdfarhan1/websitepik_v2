@@ -50,6 +50,7 @@ class ActivityController extends Controller
             'category' => 'required|string|max:100',
             'status' => 'required|in:upcoming,ongoing,completed',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:15360', // Max 15MB
+            'documentation_images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:15360',
         ]);
 
         $imagePath = null;
@@ -63,6 +64,22 @@ class ActivityController extends Controller
             );
         }
 
+        $documentationImages = [];
+        if ($request->hasFile('documentation_images')) {
+            foreach ($request->file('documentation_images') as $docFile) {
+                if ($docFile && $docFile->isValid()) {
+                    $docPath = app(\App\Services\ImageCompressionService::class)->compressAndUpload(
+                        file: $docFile,
+                        directory: 'activities/docs',
+                        maxWidth: 1920,
+                        quality: 80,
+                        disk: 'public'
+                    );
+                    $documentationImages[] = $docPath;
+                }
+            }
+        }
+
         $activity = Activity::create([
             'title' => $request->title,
             'slug' => Str::slug($request->title) . '-' . Str::random(4),
@@ -74,6 +91,7 @@ class ActivityController extends Controller
             'category' => $request->category,
             'status' => $request->status,
             'image' => $imagePath,
+            'documentation_images' => $documentationImages,
             'created_by' => auth()->id() ?? \App\Models\User::first()?->id,
         ]);
 
@@ -109,6 +127,7 @@ class ActivityController extends Controller
             'category' => 'required|string|max:100',
             'status' => 'required|in:upcoming,ongoing,completed',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:15360', // Max 15MB
+            'documentation_images.*' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:15360',
         ]);
 
         $data = [
@@ -135,6 +154,33 @@ class ActivityController extends Controller
             );
         }
 
+        // Handle existing documentation images removal
+        $currentDocs = $activity->documentation_images ?? [];
+        if ($request->filled('remove_doc_images')) {
+            $removeImages = (array) $request->input('remove_doc_images');
+            foreach ($removeImages as $removeImg) {
+                app(\App\Services\ImageCompressionService::class)->delete($removeImg, disk: 'public');
+                $currentDocs = array_values(array_filter($currentDocs, fn($p) => $p !== $removeImg));
+            }
+        }
+
+        // Handle new uploaded documentation images
+        if ($request->hasFile('documentation_images')) {
+            foreach ($request->file('documentation_images') as $docFile) {
+                if ($docFile && $docFile->isValid()) {
+                    $docPath = app(\App\Services\ImageCompressionService::class)->compressAndUpload(
+                        file: $docFile,
+                        directory: 'activities/docs',
+                        maxWidth: 1920,
+                        quality: 80,
+                        disk: 'public'
+                    );
+                    $currentDocs[] = $docPath;
+                }
+            }
+        }
+        $data['documentation_images'] = $currentDocs;
+
         $activity->update($data);
 
         return redirect()->route('dashboard.activities.index')->with('success', 'Kegiatan agenda berhasil diperbarui!');
@@ -144,6 +190,12 @@ class ActivityController extends Controller
     {
         if ($activity->image) {
             app(\App\Services\ImageCompressionService::class)->delete($activity->image, disk: 'public');
+        }
+
+        if (!empty($activity->documentation_images) && is_array($activity->documentation_images)) {
+            foreach ($activity->documentation_images as $docImg) {
+                app(\App\Services\ImageCompressionService::class)->delete($docImg, disk: 'public');
+            }
         }
 
         $activity->delete();

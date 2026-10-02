@@ -20,12 +20,14 @@ class Activity extends Model
         'location',
         'category',
         'image',
+        'documentation_images',
         'status',
         'created_by',
     ];
 
     protected $casts = [
         'event_date' => 'date',
+        'documentation_images' => 'array',
     ];
 
     public static function boot()
