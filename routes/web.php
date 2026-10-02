@@ -34,7 +34,7 @@ Route::get('/', function (\App\Services\OrganizationStructureService $structureS
     $newsList = (new \App\Services\NewsService())->getLatestNews(4);
     $galleryList = (new \App\Services\GalleryService())->getAllGallery();
     $achievementList = (new \App\Services\AchievementService())->getLatestAchievements(3);
-    $activities = \App\Models\Activity::with('creator')->orderBy('event_date', 'asc')->get();
+    $activities = \App\Models\Activity::with('creator')->latest('id')->get();
     $structures = $structureService->getAllStructures();
     $structureSettings = $structureService->getSettings();
     $tributeEditions = $tributeService->getAllEditions(true);
@@ -93,14 +93,14 @@ Route::post('/api/tributes/appreciate', function (\Illuminate\Http\Request $requ
 })->name('tributes.appreciate');
 
 Route::get('/kegiatan', function () {
-    $activities = \App\Models\Activity::with('creator')->latest('event_date')->paginate(3);
+    $activities = \App\Models\Activity::with('creator')->latest('id')->paginate(6);
     $heroSettings = \App\Http\Controllers\Dashboard\ActivityController::getSettings();
     return view('pages.kegiatan', compact('activities', 'heroSettings'));
 })->name('kegiatan');
 
 Route::get('/kegiatan/{slug}', function ($slug) {
     $activity = \App\Models\Activity::with('creator')->where('slug', $slug)->firstOrFail();
-    $relatedActivities = \App\Models\Activity::where('id', '!=', $activity->id)->latest('event_date')->take(3)->get();
+    $relatedActivities = \App\Models\Activity::where('id', '!=', $activity->id)->latest('id')->take(3)->get();
     return view('pages.kegiatan-detail', compact('activity', 'relatedActivities'));
 })->name('kegiatan.show');
 

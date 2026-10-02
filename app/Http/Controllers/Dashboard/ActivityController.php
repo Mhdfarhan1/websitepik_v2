@@ -12,7 +12,7 @@ class ActivityController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Activity::with('creator')->latest('event_date');
+        $query = Activity::with('creator')->latest('id');
 
         if ($request->filled('search')) {
             $search = $request->search;
