@@ -159,6 +159,14 @@
                 Jejak Ketua
             </x-dashboard.sidebar-item>
 
+            <x-dashboard.sidebar-item href="{{ route('dashboard.time-capsules.index') }}" icon="fas fa-box-archive" :active="request()->routeIs('dashboard.time-capsules.*')">
+                Kotak Waktu PIK-R
+            </x-dashboard.sidebar-item>
+
+            <x-dashboard.sidebar-item href="{{ route('dashboard.memory-messages.index') }}" icon="fas fa-feather-pointed" :active="request()->routeIs('dashboard.memory-messages.*')">
+                Jejak Rasa
+            </x-dashboard.sidebar-item>
+
             @if($canSee('profil_lengkap'))
                 <x-dashboard.sidebar-item href="{{ route('dashboard.complete-profile.index') }}" icon="fas fa-address-card" :active="request()->routeIs('dashboard.complete-profile.*')">
                     Profil Lengkap

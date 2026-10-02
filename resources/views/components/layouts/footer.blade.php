@@ -73,6 +73,12 @@
                     <li><a href="{{ route('jejak-bakti') }}"
                             class="hover:text-white hover:pl-1.5 transition-all duration-200 flex items-center gap-2"><i
                                 class="fas fa-chevron-right text-[9px] text-[#f59e0b]"></i> Jejak Bakti & Duta</a></li>
+                    <li><a href="{{ route('kotak-waktu') }}"
+                            class="hover:text-white hover:pl-1.5 transition-all duration-200 flex items-center gap-2"><i
+                                class="fas fa-chevron-right text-[9px] text-[#f59e0b]"></i> Kotak Waktu PIK-R</a></li>
+                    <li><a href="{{ route('jejak-rasa') }}"
+                            class="hover:text-white hover:pl-1.5 transition-all duration-200 flex items-center gap-2"><i
+                                class="fas fa-chevron-right text-[9px] text-[#f59e0b]"></i> Jejak Rasa (Kata Tak Terucap)</a></li>
                     <li><a href="{{ route('proker') }}"
                             class="hover:text-white hover:pl-1.5 transition-all duration-200 flex items-center gap-2"><i
                                 class="fas fa-chevron-right text-[9px] text-[#f59e0b]"></i> Program Kerja</a></li>

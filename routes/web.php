@@ -78,6 +78,14 @@ Route::get('/profil/jejak-ketua', function (\App\Services\LeaderService $leaderS
     return view('pages.jejak-ketua', compact('setting', 'leaders'));
 })->name('jejak-ketua');
 
+// Kotak Waktu PIK-R (Time Capsule Digital) - Fitur Terpisah & Mandiri
+Route::get('/profil/kotak-waktu', [\App\Http\Controllers\TimeCapsulePublicController::class, 'index'])->name('kotak-waktu');
+Route::get('/profil/kotak-waktu/{slug}', [\App\Http\Controllers\TimeCapsulePublicController::class, 'index'])->name('kotak-waktu.show');
+
+// Jejak Rasa: Kata yang Belum Sempat Terucap (Bilik Nostalgia & Haru)
+Route::get('/profil/jejak-rasa', [\App\Http\Controllers\MemoryMessagePublicController::class, 'index'])->name('jejak-rasa');
+Route::post('/api/jejak-rasa/{id}/peluk', [\App\Http\Controllers\MemoryMessagePublicController::class, 'hug'])->name('jejak-rasa.hug');
+
 Route::post('/api/tributes/appreciate', function (\Illuminate\Http\Request $request, \App\Services\TributeService $tributeService) {
     $editionId = $request->input('edition_id');
     $count = $tributeService->incrementAppreciation($editionId);
@@ -296,6 +304,34 @@ Route::middleware(['auth', 'force_password'])->prefix('dashboard')->name('dashbo
     Route::put('/leaders/{id}', [\App\Http\Controllers\Dashboard\LeaderController::class, 'update'])->name('leaders.update');
     Route::delete('/leaders/{id}', [\App\Http\Controllers\Dashboard\LeaderController::class, 'destroy'])->name('leaders.destroy');
     Route::post('/leaders/reorder', [\App\Http\Controllers\Dashboard\LeaderController::class, 'reorder'])->name('leaders.reorder');
+
+    // Kotak Waktu PIK-R (Time Capsule Digital)
+    Route::get('/time-capsules', [\App\Http\Controllers\Dashboard\TimeCapsuleController::class, 'index'])->name('time-capsules.index');
+    Route::post('/time-capsules/settings', [\App\Http\Controllers\Dashboard\TimeCapsuleController::class, 'updateSettings'])->name('time-capsules.settings.update');
+    Route::post('/time-capsules', [\App\Http\Controllers\Dashboard\TimeCapsuleController::class, 'storeCapsule'])->name('time-capsules.store');
+    Route::put('/time-capsules/{id}', [\App\Http\Controllers\Dashboard\TimeCapsuleController::class, 'updateCapsule'])->name('time-capsules.update');
+    Route::delete('/time-capsules/{id}', [\App\Http\Controllers\Dashboard\TimeCapsuleController::class, 'destroyCapsule'])->name('time-capsules.destroy');
+    Route::post('/time-capsules/{id}/feature', [\App\Http\Controllers\Dashboard\TimeCapsuleController::class, 'setFeatured'])->name('time-capsules.feature');
+    Route::post('/time-capsules/{capsuleId}/items', [\App\Http\Controllers\Dashboard\TimeCapsuleController::class, 'storeItem'])->name('time-capsules.items.store');
+    Route::put('/time-capsules/items/{id}', [\App\Http\Controllers\Dashboard\TimeCapsuleController::class, 'updateItem'])->name('time-capsules.items.update');
+    Route::delete('/time-capsules/items/{id}', [\App\Http\Controllers\Dashboard\TimeCapsuleController::class, 'destroyItem'])->name('time-capsules.items.destroy');
+
+    // Jejak Rasa: Kata yang Belum Sempat Terucap
+    Route::get('/memory-messages', [\App\Http\Controllers\Dashboard\MemoryMessageController::class, 'index'])->name('memory-messages.index');
+    Route::post('/memory-messages', [\App\Http\Controllers\Dashboard\MemoryMessageController::class, 'storeMessage'])->name('memory-messages.store');
+    Route::put('/memory-messages/{id}', [\App\Http\Controllers\Dashboard\MemoryMessageController::class, 'updateMessage'])->name('memory-messages.update');
+    Route::post('/memory-messages/settings', [\App\Http\Controllers\Dashboard\MemoryMessageController::class, 'updateSettings'])->name('memory-messages.settings.update');
+    Route::post('/memory-messages/{id}/toggle-approve', [\App\Http\Controllers\Dashboard\MemoryMessageController::class, 'toggleApproval'])->name('memory-messages.toggle-approve');
+    Route::post('/memory-messages/{id}/toggle-pin', [\App\Http\Controllers\Dashboard\MemoryMessageController::class, 'togglePin'])->name('memory-messages.toggle-pin');
+    Route::delete('/memory-messages/{id}', [\App\Http\Controllers\Dashboard\MemoryMessageController::class, 'destroyMessage'])->name('memory-messages.destroy');
+
+    Route::post('/memory-messages/moments', [\App\Http\Controllers\Dashboard\MemoryMessageController::class, 'storeMoment'])->name('memory-messages.moments.store');
+    Route::put('/memory-messages/moments/{id}', [\App\Http\Controllers\Dashboard\MemoryMessageController::class, 'updateMoment'])->name('memory-messages.moments.update');
+    Route::delete('/memory-messages/moments/{id}', [\App\Http\Controllers\Dashboard\MemoryMessageController::class, 'destroyMoment'])->name('memory-messages.moments.destroy');
+
+    Route::post('/memory-messages/farewells', [\App\Http\Controllers\Dashboard\MemoryMessageController::class, 'storeFarewell'])->name('memory-messages.farewells.store');
+    Route::put('/memory-messages/farewells/{id}', [\App\Http\Controllers\Dashboard\MemoryMessageController::class, 'updateFarewell'])->name('memory-messages.farewells.update');
+    Route::delete('/memory-messages/farewells/{id}', [\App\Http\Controllers\Dashboard\MemoryMessageController::class, 'destroyFarewell'])->name('memory-messages.farewells.destroy');
 
     // Pusat Notifikasi & Broadcast Web Push
     Route::get('/notifications', [NotificationAdminController::class, 'index'])->name('notifications.index');

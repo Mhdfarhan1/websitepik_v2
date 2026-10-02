@@ -74,7 +74,7 @@ class ActivityController extends Controller
             'category' => $request->category,
             'status' => $request->status,
             'image' => $imagePath,
-            'created_by' => auth()->id(),
+            'created_by' => auth()->id() ?? \App\Models\User::first()?->id,
         ]);
 
         // Dispatch Centralized Web Push & Notification Center
@@ -111,20 +111,7 @@ class ActivityController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:15360', // Max 15MB
         ]);
 
-        if ($request->hasFile('image')) {
-            if ($activity->image) {
-                app(\App\Services\ImageCompressionService::class)->delete($activity->image, disk: 'public');
-            }
-            $activity->image = app(\App\Services\ImageCompressionService::class)->compressAndUpload(
-                file: $request->file('image'),
-                directory: 'activities',
-                maxWidth: 1920,
-                quality: 80,
-                disk: 'public'
-            );
-        }
-
-        $activity->update([
+        $data = [
             'title' => $request->title,
             'description' => $request->description,
             'event_date' => $request->event_date,
@@ -133,7 +120,22 @@ class ActivityController extends Controller
             'location' => $request->location,
             'category' => $request->category,
             'status' => $request->status,
-        ]);
+        ];
+
+        if ($request->hasFile('image')) {
+            if ($activity->image) {
+                app(\App\Services\ImageCompressionService::class)->delete($activity->image, disk: 'public');
+            }
+            $data['image'] = app(\App\Services\ImageCompressionService::class)->compressAndUpload(
+                file: $request->file('image'),
+                directory: 'activities',
+                maxWidth: 1920,
+                quality: 80,
+                disk: 'public'
+            );
+        }
+
+        $activity->update($data);
 
         return redirect()->route('dashboard.activities.index')->with('success', 'Kegiatan agenda berhasil diperbarui!');
     }
